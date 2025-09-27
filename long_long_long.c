@@ -11,7 +11,7 @@ static inline void lllSet(uint8_t *a, const uint8_t val, const uint32_t size) {
   memset(a, val, size);
 }
 
-int8_t lldComp(const uint8_t *a, const uint8_t *b, const uint32_t size) {
+int8_t lllComp(const uint8_t *a, const uint8_t *b, const uint32_t size) {
   const uint8_t *aptr = a + size, *bptr = b + size;
 
   while (aptr != a) {
