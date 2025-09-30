@@ -37,6 +37,12 @@ public:
     return out;
   }
 
+  Integer operator-(const Integer &other) const {
+    Integer out;
+    sub(*this, other, out);
+    return out;
+  }
+
 private:
   friend int cmpr(const Integer &a, const Integer &b);
   friend void neg(const Integer &a, Integer &out);

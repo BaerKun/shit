@@ -1,7 +1,7 @@
 #include "integer.hpp"
 
 namespace lll {
-using DataType = std::vector<uint64_t>;
+ using VecU64 = std::vector<uint64_t>;
 
 static inline void add64(const uint64_t a, const uint64_t b, uint64_t &carry,
                          uint64_t &out) {
@@ -18,8 +18,7 @@ static inline void sub64(const uint64_t a, const uint64_t b, uint64_t &borrow,
   borrow = borrow_;
 }
 
-static int ucmpr(const std::vector<uint64_t> &a,
-                 const std::vector<uint64_t> &b) {
+static int ucmpr(const VecU64 &a, const VecU64 &b) {
   const size_t size_a = a.size();
   const size_t size_b = b.size();
 
@@ -47,8 +46,7 @@ void neg(const Integer &a, Integer &out) {
   out.data_ = a.data_;
 }
 
-static void uadd(const std::vector<uint64_t> &max,
-                 const std::vector<uint64_t> &min, std::vector<uint64_t> &out) {
+static void uadd(const VecU64 &max, const VecU64 &min, VecU64 &out) {
   const size_t size_max = max.size();
   const size_t size_min = min.size();
   uint64_t carry = 0;
@@ -68,8 +66,7 @@ static void uadd(const std::vector<uint64_t> &max,
   if (carry) out.push_back(1);
 }
 
-static void usub(const std::vector<uint64_t> &max,
-                 const std::vector<uint64_t> &min, std::vector<uint64_t> &out) {
+static void usub(const VecU64 &max, const VecU64 &min, VecU64 &out) {
   const size_t size_max = max.size();
   const size_t size_min = min.size();
   uint64_t borrow = 0;
