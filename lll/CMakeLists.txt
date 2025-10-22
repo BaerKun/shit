@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(lll)
 
+set(CMAKE_CXX_STANDARD 11)
+
 add_library(lll_int
         integer/internal.cpp
         integer/multiply.cpp
