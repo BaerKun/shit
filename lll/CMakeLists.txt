@@ -4,6 +4,7 @@ project(lll)
 set(CMAKE_CXX_STANDARD 11)
 
 add_library(lll_int
+        integer/division.cpp
         integer/internal.cpp
         integer/multiply.cpp
         integer/simply.cpp)

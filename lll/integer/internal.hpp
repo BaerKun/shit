@@ -6,23 +6,24 @@
 namespace lll {
 using VecU64 = std::vector<uint64_t>;
 namespace internal {
-static inline void add64(const uint64_t a, const uint64_t b, uint64_t &carry,
-                         uint64_t &out) {
+static inline uint64_t add64(const uint64_t a, const uint64_t b,
+                             uint64_t &carry) {
   const uint64_t sum = a + b + carry;
   carry = sum < a || sum < b;
-  out = sum;
+  return sum;
 }
 
-static inline void sub64(const uint64_t a, const uint64_t b, uint64_t &borrow,
-                         uint64_t &out) {
-  const uint64_t diff = a - b;
+static inline uint64_t sub64(const uint64_t a, const uint64_t b,
+                             uint64_t &borrow) {
+  uint64_t diff = a - b;
   const uint64_t borrow_ = a < b || diff < borrow;
-  out = diff - borrow;
+  diff -= borrow;
   borrow = borrow_;
+  return diff;
 }
 
-static inline void mul64(const uint64_t a, const uint64_t b, uint64_t &low,
-                         uint64_t &high) {
+static inline void mul64(const uint64_t a, const uint64_t b, uint64_t &high,
+                         uint64_t &low) {
 #if defined(_MSC_VER)
   low = _umul128(a, b, &high);
 #elif defined(__GNUC__) || defined(__clang__)

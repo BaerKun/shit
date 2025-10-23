@@ -3,28 +3,40 @@
 namespace lll {
 using namespace internal;
 
-void mul(const Integer &a, const Integer &b, Integer &out) {
-  const VecU64 &abs_a = a.abs_val_;
-  const VecU64 &abs_b = b.abs_val_;
-  const size_t size_a = abs_a.size();
-  const size_t size_b = abs_b.size();
-  VecU64 res(abs_a.size() + abs_b.size(), 0);
+static void grade_school(const VecU64 &a, const VecU64 &b, VecU64 &out) {
+  const size_t size_a = a.size();
+  const size_t size_b = a.size();
+  VecU64 res(size_a + size_b, 0);
 
   for (size_t i = 0; i < size_a; i++) {
-    uint64_t low, high = 0;
+    uint64_t high, low, carry = 0;
     for (size_t j = 0; j < size_b; j++) {
+      mul64(a[i], b[j], high, low);
       uint64_t &sum = res[i + j];
-      sum += high;
+      sum += carry;
       const uint64_t carry1 = sum < high;
-      mul64(abs_a[i], abs_b[j], low, high);
       sum += low;
       const uint64_t carry2 = sum < low;
-      high += carry1 + carry2;
+      carry = high + carry1 + carry2;
     }
-    res[i + size_b] = high;
+    res[i + size_b] = carry;
+  }
+  if (res[size_a + size_b - 1] == 0) res.pop_back();
+
+  out = std::move(res);
+}
+
+void mul(const Integer &a, const Integer &b, Integer &out) {
+  if (a.zero() || b.zero()) {
+    out = 0;
+    return;
   }
 
-  out.abs_val_ = std::move(res);
+  const VecU64 &abs_a = a.abs_val_;
+  const VecU64 &abs_b = b.abs_val_;
+
+  grade_school(abs_a, abs_b, out.abs_val_);
+
   out.neg_ = a.neg_ ^ b.neg_;
 }
 } // namespace lll

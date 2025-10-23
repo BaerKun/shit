@@ -24,7 +24,7 @@ void add(const Integer &a, const Integer &b, Integer &out) {
 
   if (ucmpr_res == 0 && a.neg_ != b.neg_) {
     out = 0;
-  } else if (ucmpr_res == 1) {
+  } else if (ucmpr_res > 0) {
     if (a.neg_ == b.neg_) {
       uadd(abs_a, abs_b, out.abs_val_);
     } else {
@@ -48,7 +48,7 @@ void sub(const Integer &a, const Integer &b, Integer &out) {
 
   if (ucmpr_res == 0 && a.neg_ == b.neg_) {
     out = 0;
-  } else if (ucmpr_res == 1) {
+  } else if (ucmpr_res > 0) {
     if (a.neg_ == b.neg_) {
       usub(abs_a, abs_b, out.abs_val_);
     } else {
