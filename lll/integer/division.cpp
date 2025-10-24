@@ -4,10 +4,14 @@
 namespace lll {
 using namespace internal;
 
-// quotient is always 64-bits.
+// quotient should be always 64-bits.
 static inline uint64_t div128(const uint64_t high, const uint64_t low,
                               const uint64_t divisor, uint64_t &rem) {
+#if defined(_MSC_VER)
   return _udiv128(high, low, divisor, &rem);
+#elif defined(__GNUC__) || defined(__clang__)
+
+#endif
 }
 
 static void div_impl(const VecU64 &a, const VecU64 &b, VecU64 &quot,
@@ -15,15 +19,21 @@ static void div_impl(const VecU64 &a, const VecU64 &b, VecU64 &quot,
   const size_t size_a = a.size();
   const size_t size_b = b.size();
 
+  if (size_a < size_b) {
+    quot = {0};
+    rem = a;
+    return;
+  }
+
   if (size_b == 1) {
     const uint64_t divisor = b[0];
     VecU64 quot_tmp(size_a);
     uint64_t high = 0;
 
-    for(size_t i = size_a; i--;) {
+    for (size_t i = size_a; i--;) {
       quot_tmp[i] = div128(high, a[i], divisor, high);
     }
-    if(quot_tmp[size_a - 1] == 0) quot.pop_back();
+    if (quot_tmp[size_a - 1] == 0) quot.pop_back();
     quot = std::move(quot_tmp);
     rem = {high};
     return;
@@ -32,12 +42,7 @@ static void div_impl(const VecU64 &a, const VecU64 &b, VecU64 &quot,
 }
 
 void div(const Integer &a, const Integer &b, Integer &quot, Integer &rem) {
-  if(b.zero()) throw std::runtime_error("Division by zero");
-  if(a.zero()) {
-    quot = 0;
-    rem = 0;
-    return;
-  }
+  if (b.zero()) throw std::runtime_error("Division by zero");
 
   const VecU64 &abs_a = a.abs_val_;
   const VecU64 &abs_b = b.abs_val_;

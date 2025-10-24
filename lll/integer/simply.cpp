@@ -13,6 +13,7 @@ int cmpr(const Integer &a, const Integer &b) {
 }
 
 void neg(const Integer &a, Integer &out) {
+  if (a.zero()) return;
   out.neg_ = !a.neg_;
   out.abs_val_ = a.abs_val_;
 }

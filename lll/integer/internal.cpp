@@ -23,7 +23,7 @@ void uadd(const VecU64 &max, const VecU64 &min, VecU64 &out) {
 
   out.resize(size_max);
   for (size_t i = 0; i < size_min; i++) {
-    add64(max[i], min[i], carry, out[i]);
+    out[i] = add64(max[i], min[i], carry, carry);
   }
 
   for (size_t i = size_min; i < size_max; i++) {
@@ -31,7 +31,7 @@ void uadd(const VecU64 &max, const VecU64 &min, VecU64 &out) {
       memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
       return;
     }
-    add64(max[i], 0, carry, out[i]);
+    out[i] = add64(max[i], 0, carry, carry);
   }
   if (carry) out.push_back(1);
 }
@@ -43,7 +43,7 @@ void usub(const VecU64 &max, const VecU64 &min, VecU64 &out) {
 
   out.resize(size_max);
   for (size_t i = 0; i < size_min; i++) {
-    sub64(max[i], min[i], borrow, out[i]);
+    out[i] = sub64(max[i], min[i], borrow, borrow);
   }
 
   if (size_max == size_min) {
@@ -56,7 +56,7 @@ void usub(const VecU64 &max, const VecU64 &min, VecU64 &out) {
         memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
         return;
       }
-      sub64(max[i], 0, borrow, out[i]);
+      out[i] = sub64(max[i], 0, borrow, borrow);
     }
     if (out[size_max - 1] == 0) out.pop_back();
   }
