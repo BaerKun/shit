@@ -28,17 +28,18 @@ public:
   explicit Integer(const std::string &value);
 
   Integer(const int64_t value = 0) // NOLINT(*-explicit-constructor)
-    : abs_val_({static_cast<uint64_t>(std::abs(value))}), neg_(value < 0) {
+    : abs_val_(value != 0, static_cast<uint64_t>(std::abs(value))),
+      neg_(value < 0) {
   }
 
   size_t size() const { return abs_val_.size() * 8; }
 
-  bool zero() const { return abs_val_.size() == 1 && abs_val_[0] == 0; }
+  bool zero() const { return abs_val_.empty(); }
 
   Integer &operator=(const Integer &other) = default;
 
   Integer &operator=(const int64_t value) {
-    abs_val_ = {static_cast<uint64_t>(std::abs(value))};
+    abs_val_.assign(value != 0, static_cast<uint64_t>(std::abs(value)));
     neg_ = value < 0;
     return *this;
   }

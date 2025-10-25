@@ -17,7 +17,7 @@ static void grade_school(const VecU64 &a, const VecU64 &b, VecU64 &out) {
     }
     res[i + size_b] = carry;
   }
-  if (res[size_a + size_b - 1] == 0) res.pop_back();
+  norm_top(res);
 
   out = std::move(res);
 }

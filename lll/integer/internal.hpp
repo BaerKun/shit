@@ -5,10 +5,11 @@
 
 namespace lll {
 using VecU64 = std::vector<uint64_t>;
+
 namespace internal {
 // a + b + c, carry = 0, 1, 2
-static inline uint64_t add64(const uint64_t a, const uint64_t b, const uint64_t c,
-                             uint64_t &carry) {
+static inline uint64_t add64(const uint64_t a, const uint64_t b,
+                             const uint64_t c, uint64_t &carry) {
   uint64_t sum = a + b;
   const uint64_t carry1 = sum < b;
 
@@ -20,8 +21,8 @@ static inline uint64_t add64(const uint64_t a, const uint64_t b, const uint64_t 
 }
 
 // a - b - c, borrow = 0, 1, 2
-static inline uint64_t sub64(const uint64_t a, const uint64_t b, const uint64_t c,
-                             uint64_t &borrow) {
+static inline uint64_t sub64(const uint64_t a, const uint64_t b,
+                             const uint64_t c, uint64_t &borrow) {
   uint64_t diff = a - b;
   const uint64_t borrow1 = a < b;
 
@@ -43,9 +44,19 @@ static inline void mul64(const uint64_t a, const uint64_t b, uint64_t &high,
 #endif
 }
 
-int ucmpr(const VecU64 &a, const VecU64 &b);
-void uadd(const VecU64 &max, const VecU64 &min, VecU64 &out);
-void usub(const VecU64 &max, const VecU64 &min, VecU64 &out);
+static inline void assign64(VecU64 &a, const uint64_t value) {
+  a.assign(value != 0, value);
+}
+
+static inline void norm_top(VecU64 &a) {
+  if (a.back() == 0) a.pop_back();
+}
+
+static void norm(VecU64 &a) {
+  size_t i = a.size();
+  while (i-- && a[i] == 0);
+  a.resize(i + 1);
+}
 } // namespace internal
 } // namespace lll
 
