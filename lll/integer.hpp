@@ -55,6 +55,30 @@ public:
     return out;
   }
 
+  Integer operator*(const Integer &other) const {
+    Integer out;
+    mul(*this, other, out);
+    return out;
+  }
+
+  Integer operator/(const Integer &other) const {
+    Integer quot, rem;
+    div(*this, other, quot, rem);
+    return quot;
+  }
+
+  Integer operator%(const Integer &other) const {
+    Integer quot, rem;
+    div(*this, other, quot, rem);
+    return rem;
+  }
+
+  Integer divide(const Integer &other, Integer &rem) const {
+    Integer quot;
+    div(*this, other, quot, rem);
+    return quot;
+  }
+
 private:
   friend int cmpr(const Integer &, const Integer &);
   friend void neg(const Integer &, Integer &);
