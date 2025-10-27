@@ -36,6 +36,12 @@ public:
 
   bool zero() const { return abs_val_.empty(); }
 
+  Integer divide(const Integer &other, Integer &rem) const {
+    Integer quot;
+    div(*this, other, quot, rem);
+    return quot;
+  }
+
   Integer &operator=(const Integer &other) = default;
 
   Integer &operator=(const int64_t value) {
@@ -72,12 +78,6 @@ public:
     Integer quot, rem;
     div(*this, other, quot, rem);
     return rem;
-  }
-
-  Integer divide(const Integer &other, Integer &rem) const {
-    Integer quot;
-    div(*this, other, quot, rem);
-    return quot;
   }
 
 private:

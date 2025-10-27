@@ -31,7 +31,9 @@ int cmpr(const Integer &a, const Integer &b) {
   return ucmpr(a.abs_val_, b.abs_val_);
 }
 
-static void uadd(const VecU64 &max, const VecU64 &min, VecU64 &out) {
+static void uadd(const VecU64 &a, const VecU64 &b, VecU64 &out) {
+  const VecU64 &max = a.size() > b.size() ? a : b;
+  const VecU64 &min = a.size() > b.size() ? b : a;
   const size_t size_max = max.size();
   const size_t size_min = min.size();
   uint64_t carry = 0;
@@ -78,48 +80,46 @@ static void usub(const VecU64 &max, const VecU64 &min, VecU64 &out) {
 void add(const Integer &a, const Integer &b, Integer &out) {
   const VecU64 &abs_a = a.abs_val_;
   const VecU64 &abs_b = b.abs_val_;
-  const int ucmpr_res = ucmpr(abs_a, abs_b);
 
-  if (ucmpr_res == 0 && a.neg_ != b.neg_) {
-    out = 0;
-  } else if (ucmpr_res > 0) {
-    if (a.neg_ == b.neg_) {
-      uadd(abs_a, abs_b, out.abs_val_);
-    } else {
-      usub(abs_a, abs_b, out.abs_val_);
-    }
+  if (a.neg_ == b.neg_) {
+    uadd(abs_a, abs_b, out.abs_val_);
     out.neg_ = a.neg_;
   } else {
-    if (a.neg_ == b.neg_) {
-      uadd(abs_b, abs_a, out.abs_val_);
-    } else {
+    switch (ucmpr(abs_a, abs_b)) {
+    case 1:
+      out.neg_ = a.neg_;
+      usub(abs_a, abs_b, out.abs_val_);
+      break;
+    case -1:
+      out.neg_ = b.neg_;
       usub(abs_b, abs_a, out.abs_val_);
+      break;
+    default: // 0
+      out = 0;
     }
-    out.neg_ = b.neg_;
   }
 }
 
 void sub(const Integer &a, const Integer &b, Integer &out) {
   const VecU64 &abs_a = a.abs_val_;
   const VecU64 &abs_b = b.abs_val_;
-  const int ucmpr_res = ucmpr(abs_a, abs_b);
 
-  if (ucmpr_res == 0 && a.neg_ == b.neg_) {
-    out = 0;
-  } else if (ucmpr_res > 0) {
-    if (a.neg_ == b.neg_) {
-      usub(abs_a, abs_b, out.abs_val_);
-    } else {
-      uadd(abs_a, abs_b, out.abs_val_);
-    }
+  if (a.neg_ != b.neg_) {
+    uadd(abs_a, abs_b, out.abs_val_);
     out.neg_ = a.neg_;
   } else {
-    if (a.neg_ == b.neg_) {
+    switch (ucmpr(abs_a, abs_b)) {
+    case 1:
+      out.neg_ = a.neg_;
+      usub(abs_a, abs_b, out.abs_val_);
+      break;
+    case -1:
+      out.neg_ = !b.neg_;
       usub(abs_b, abs_a, out.abs_val_);
-    } else {
-      uadd(abs_b, abs_a, out.abs_val_);
+      break;
+    default:
+      out = 0;
     }
-    out.neg_ = !b.neg_;
   }
 }
 } // namespace lll

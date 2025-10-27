@@ -26,6 +26,8 @@ static inline uint64_t div128(const uint64_t high, const uint64_t low,
   const __uint128_t dividend = (__uint128_t)high << 64 | (__uint128_t)low;
   rem = dividend % divisor;
   return dividend / divisor;
+#else
+
 #endif
 }
 

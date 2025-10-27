@@ -5,7 +5,7 @@ using namespace internal;
 
 static void grade_school(const VecU64 &a, const VecU64 &b, VecU64 &out) {
   const size_t size_a = a.size();
-  const size_t size_b = a.size();
+  const size_t size_b = b.size();
   VecU64 res(size_a + size_b, 0);
 
   for (size_t i = 0; i < size_a; i++) {

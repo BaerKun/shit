@@ -41,6 +41,8 @@ static inline void mul64(const uint64_t a, const uint64_t b, uint64_t &high,
   const __uint128_t prod = (__uint128_t)a * (__uint128_t)b;
   low = (uint64_t)prod;
   high = (uint64_t)(prod >> 64);
+#else
+
 #endif
 }
 
