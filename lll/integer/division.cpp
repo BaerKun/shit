@@ -31,13 +31,13 @@ static inline uint64_t div128(const uint64_t high, const uint64_t low,
 #endif
 }
 
-static void divided_by_64bits(const VecU64 &dividend, const uint64_t divisor,
-                              VecU64 &quot, VecU64 &rem) {
+void div_64bits(const VecU64 &dividend, const uint64_t divisor,
+                VecU64 &quot, uint64_t &rem) {
   uint64_t high = 0;
   for (size_t i = dividend.size(); i--;) {
     quot[i] = div128(high, dividend[i], divisor, high);
   }
-  assign64(rem, high);
+  rem = high;
 }
 
 static void divided_by_lll(const VecU64 &dividend, const VecU64 &divisor,
@@ -115,7 +115,9 @@ static void div_impl(const VecU64 &dividend, const VecU64 &divisor,
 
   VecU64 quot_tmp(m - n + 1);
   if (n == 1) {
-    divided_by_64bits(dividend, divisor[0], quot_tmp, rem);
+    uint64_t rem_;
+    div_64bits(dividend, divisor[0], quot_tmp, rem_);
+    assign64(rem, rem_);
   } else {
     divided_by_lll(dividend, divisor, quot_tmp, rem);
   }
@@ -127,9 +129,9 @@ static void div_impl(const VecU64 &dividend, const VecU64 &divisor,
 void div(const Integer &a, const Integer &b, Integer &quot, Integer &rem) {
   if (b.zero()) throw std::runtime_error("Division by zero");
 
-  div_impl(a.abs_val_, b.abs_val_, quot.abs_val_, rem.abs_val_);
+  div_impl(a.abs_val, b.abs_val, quot.abs_val, rem.abs_val);
 
-  quot.neg_ = !quot.zero() && a.neg_ ^ b.neg_;
-  rem.neg_ = !rem.zero() && a.neg_;
+  quot.neg = !quot.zero() && a.neg ^ b.neg;
+  rem.neg = !rem.zero() && a.neg;
 }
 } // namespace lll

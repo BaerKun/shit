@@ -28,8 +28,8 @@ void mul(const Integer &a, const Integer &b, Integer &out) {
     return;
   }
 
-  grade_school(a.abs_val_, b.abs_val_, out.abs_val_);
+  grade_school(a.abs_val, b.abs_val, out.abs_val);
 
-  out.neg_ = a.neg_ ^ b.neg_;
+  out.neg = a.neg ^ b.neg;
 }
 } // namespace lll

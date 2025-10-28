@@ -1,6 +1,7 @@
 #ifndef INTEGER_H
 #define INTEGER_H
 
+#include <iostream>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -23,31 +24,44 @@ void div(const Integer &a, const Integer &b, Integer &quot, Integer &rem);
 // pow(a, b)
 void pow(const Integer &a, uint64_t b, Integer &out);
 
+void add_64bits(const Integer &a, uint64_t b, Integer &out);
+void sub_64bits(const Integer &a, uint64_t b, Integer &out);
+void mul_64bits(const Integer &a, uint64_t b, Integer &out);
+void div_64bits(const Integer &a, uint64_t b, Integer &quot, uint64_t &rem);
+
 class Integer {
 public:
+  std::vector<uint64_t> abs_val;
+  bool neg;
+
+  Integer(const Integer &other) = default;
+  Integer(Integer &&other) = default;
+  Integer &operator=(const Integer &other) = default;
+  Integer &operator=(Integer &&other) = default;
+
   explicit Integer(const std::string &value);
 
   Integer(const int64_t value = 0) // NOLINT(*-explicit-constructor)
-    : abs_val_(value != 0, static_cast<uint64_t>(std::abs(value))),
-      neg_(value < 0) {
+    : abs_val(value != 0, static_cast<uint64_t>(std::abs(value))),
+      neg(value < 0) {
   }
 
-  size_t size() const { return abs_val_.size() * 8; }
+  Integer &operator=(const int64_t value) {
+    abs_val.assign(value != 0, static_cast<uint64_t>(std::abs(value)));
+    neg = value < 0;
+    return *this;
+  }
 
-  bool zero() const { return abs_val_.empty(); }
+  size_t size() const { return abs_val.size() * 8; }
+
+  bool zero() const { return abs_val.empty(); }
+
+  std::string to_string() const;
 
   Integer divide(const Integer &other, Integer &rem) const {
     Integer quot;
     div(*this, other, quot, rem);
     return quot;
-  }
-
-  Integer &operator=(const Integer &other) = default;
-
-  Integer &operator=(const int64_t value) {
-    abs_val_.assign(value != 0, static_cast<uint64_t>(std::abs(value)));
-    neg_ = value < 0;
-    return *this;
   }
 
   Integer operator+(const Integer &other) const {
@@ -80,17 +94,10 @@ public:
     return rem;
   }
 
-private:
-  friend int cmpr(const Integer &, const Integer &);
-  friend void neg(const Integer &, Integer &);
-  friend void add(const Integer &, const Integer &, Integer &);
-  friend void sub(const Integer &, const Integer &, Integer &);
-  friend void mul(const Integer &, const Integer &, Integer &);
-  friend void div(const Integer &, const Integer &, Integer &, Integer &);
-  friend void pow(const Integer &, uint64_t, Integer &);
-
-  std::vector<uint64_t> abs_val_;
-  bool neg_;
+  friend std::istream& operator>>(std::istream& is, Integer& a);
+  friend std::ostream& operator<<(std::ostream& os, const Integer& a) {
+    return os << a.to_string();
+  }
 };
 
 } // namespace lll

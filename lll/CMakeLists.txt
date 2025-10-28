@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 11)
 add_library(lll_int
         integer/division.cpp
         integer/multiply.cpp
-        integer/simply.cpp)
+        integer/simply.cpp
+        integer/io.cpp)
 
 add_executable(test _test.cpp)
 target_link_libraries(test PRIVATE lll_int)
