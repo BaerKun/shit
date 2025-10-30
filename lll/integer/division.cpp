@@ -31,13 +31,29 @@ static inline uint64_t div128(const uint64_t high, const uint64_t low,
 #endif
 }
 
-void div_64bits(const VecU64 &dividend, const uint64_t divisor,
-                VecU64 &quot, uint64_t &rem) {
+void internal::div_64bits_internal(const VecU64 &dividend,
+                                   const uint64_t divisor,
+                                   VecU64 &quot, uint64_t &rem) {
+  VecU64 quot_tmp(dividend.size());
   uint64_t high = 0;
   for (size_t i = dividend.size(); i--;) {
-    quot[i] = div128(high, dividend[i], divisor, high);
+    quot_tmp[i] = div128(high, dividend[i], divisor, high);
   }
+  norm(quot_tmp);
+  quot = std::move(quot_tmp);
   rem = high;
+}
+
+void div_64bits(const Integer &a, const int64_t b, Integer &quot,
+                int64_t &rem) {
+  if (b == 0) throw std::runtime_error("Division by zero");
+
+  uint64_t rem_u;
+  div_64bits_internal(a.abs_val, std::abs(b), quot.abs_val, rem_u);
+
+  quot.neg = !quot.zero() && a.neg ^ (b < 0);
+  if (a.neg) rem_u = -rem_u;
+  rem = static_cast<int64_t>(rem_u);
 }
 
 static void divided_by_lll(const VecU64 &dividend, const VecU64 &divisor,
@@ -45,7 +61,6 @@ static void divided_by_lll(const VecU64 &dividend, const VecU64 &divisor,
   const size_t m = dividend.size();
   const size_t n = divisor.size();
   const unsigned shift = nlz64(divisor[n - 1]);
-
   VecU64 ddd(m + 1), dsr(n);
 
   ddd[m] = dividend[m - 1] >> (64 - shift);
@@ -58,6 +73,8 @@ static void divided_by_lll(const VecU64 &dividend, const VecU64 &divisor,
     dsr[i] = (divisor[i] << shift) | (divisor[i - 1] >> (64 - shift));
   }
   dsr[0] = divisor[0] << shift;
+
+  quot.resize(m - n + 1);
 
   const uint64_t dsr_top1 = dsr[n - 1];
   const uint64_t dsr_top2 = dsr[n - 2];
@@ -99,6 +116,8 @@ static void divided_by_lll(const VecU64 &dividend, const VecU64 &divisor,
   for (i = 0; i < n; i++) {
     rem[i] = (ddd[i] >> shift) | (ddd[i + 1] << (64 - shift));
   }
+
+  norm_top(quot);
   norm(rem);
 }
 
@@ -113,17 +132,13 @@ static void div_impl(const VecU64 &dividend, const VecU64 &divisor,
     return;
   }
 
-  VecU64 quot_tmp(m - n + 1);
   if (n == 1) {
-    uint64_t rem_;
-    div_64bits(dividend, divisor[0], quot_tmp, rem_);
-    assign64(rem, rem_);
+    uint64_t rem_64bits;
+    div_64bits_internal(dividend, divisor[0], quot, rem_64bits);
+    assign64(rem, rem_64bits);
   } else {
-    divided_by_lll(dividend, divisor, quot_tmp, rem);
+    divided_by_lll(dividend, divisor, quot, rem);
   }
-  norm_top(quot_tmp);
-
-  quot = std::move(quot_tmp);
 }
 
 void div(const Integer &a, const Integer &b, Integer &quot, Integer &rem) {

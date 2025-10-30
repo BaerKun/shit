@@ -59,6 +59,9 @@ static void norm(VecU64 &a) {
   while (i-- && a[i] == 0);
   a.resize(i + 1);
 }
+
+void div_64bits_internal(const VecU64 &dividend, uint64_t divisor,
+                     VecU64 &quot, uint64_t &rem);
 } // namespace internal
 } // namespace lll
 

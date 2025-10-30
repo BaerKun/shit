@@ -63,18 +63,16 @@ static void usub(const VecU64 &max, const VecU64 &min, VecU64 &out) {
     out[i] = sub64(max[i], min[i], borrow, borrow);
   }
 
-  if (size_max == size_min) {
-    norm(out);
-  } else {
-    for (size_t i = size_min; i < size_max; i++) {
-      if (borrow == 0) {
-        memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
-        return;
-      }
-      out[i] = sub64(max[i], 0, borrow, borrow);
+  for (size_t i = size_min; i < size_max; i++) {
+    if (borrow == 0) {
+      memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
+      return;
     }
-    norm_top(out);
+    out[i] = sub64(max[i], 0, borrow, borrow);
   }
+
+  if (size_max <= size_min + 1) norm(out);
+  else norm_top(out);
 }
 
 void add(const Integer &a, const Integer &b, Integer &out) {

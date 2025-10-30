@@ -24,22 +24,24 @@ void div(const Integer &a, const Integer &b, Integer &quot, Integer &rem);
 // pow(a, b)
 void pow(const Integer &a, uint64_t b, Integer &out);
 
-void add_64bits(const Integer &a, uint64_t b, Integer &out);
-void sub_64bits(const Integer &a, uint64_t b, Integer &out);
-void mul_64bits(const Integer &a, uint64_t b, Integer &out);
-void div_64bits(const Integer &a, uint64_t b, Integer &quot, uint64_t &rem);
+void add_64bits(const Integer &a, int64_t b, Integer &out);
+void sub_64bits(const Integer &a, int64_t b, Integer &out);
+void mul_64bits(const Integer &a, int64_t b, Integer &out);
+void div_64bits(const Integer &a, int64_t b, Integer &quot, int64_t &rem);
 
 class Integer {
 public:
   std::vector<uint64_t> abs_val;
-  bool neg;
+  bool neg = false;
 
   Integer(const Integer &other) = default;
   Integer(Integer &&other) = default;
   Integer &operator=(const Integer &other) = default;
   Integer &operator=(Integer &&other) = default;
 
-  explicit Integer(const std::string &value);
+  explicit Integer(const std::string &value) {
+    *this = from_string(value);
+  }
 
   Integer(const int64_t value = 0) // NOLINT(*-explicit-constructor)
     : abs_val(value != 0, static_cast<uint64_t>(std::abs(value))),
@@ -52,11 +54,10 @@ public:
     return *this;
   }
 
-  size_t size() const { return abs_val.size() * 8; }
-
   bool zero() const { return abs_val.empty(); }
 
   std::string to_string() const;
+  static Integer from_string(const std::string &str);
 
   Integer divide(const Integer &other, Integer &rem) const {
     Integer quot;
@@ -94,8 +95,9 @@ public:
     return rem;
   }
 
-  friend std::istream& operator>>(std::istream& is, Integer& a);
-  friend std::ostream& operator<<(std::ostream& os, const Integer& a) {
+  friend std::istream &operator>>(std::istream &is, Integer &a);
+
+  friend std::ostream &operator<<(std::ostream &os, const Integer &a) {
     return os << a.to_string();
   }
 };
