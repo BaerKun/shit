@@ -44,15 +44,15 @@ void internal::div_64bits_internal(const VecU64 &dividend,
   rem = high;
 }
 
-void div_64bits(const Integer &a, const int64_t b, Integer &quot,
-                int64_t &rem) {
+void Integer::div_64bits(const Integer &a, const int64_t b, Integer &quot,
+                         int64_t &rem) {
   if (b == 0) throw std::runtime_error("Division by zero");
 
   uint64_t rem_u;
-  div_64bits_internal(a.abs_val, std::abs(b), quot.abs_val, rem_u);
+  div_64bits_internal(a.abs_val_, std::abs(b), quot.abs_val_, rem_u);
 
-  quot.neg = !quot.zero() && a.neg ^ (b < 0);
-  if (a.neg) rem_u = -rem_u;
+  quot.neg_ = !quot.zero() && a.neg_ ^ (b < 0);
+  if (a.neg_) rem_u = -rem_u;
   rem = static_cast<int64_t>(rem_u);
 }
 
@@ -141,12 +141,13 @@ static void div_impl(const VecU64 &dividend, const VecU64 &divisor,
   }
 }
 
-void div(const Integer &a, const Integer &b, Integer &quot, Integer &rem) {
+void Integer::div(const Integer &a, const Integer &b, Integer &quot,
+                  Integer &rem) {
   if (b.zero()) throw std::runtime_error("Division by zero");
 
-  div_impl(a.abs_val, b.abs_val, quot.abs_val, rem.abs_val);
+  div_impl(a.abs_val_, b.abs_val_, quot.abs_val_, rem.abs_val_);
 
-  quot.neg = !quot.zero() && a.neg ^ b.neg;
-  rem.neg = !rem.zero() && a.neg;
+  quot.neg_ = !quot.zero() && a.neg_ ^ b.neg_;
+  rem.neg_ = !rem.zero() && a.neg_;
 }
 } // namespace lll

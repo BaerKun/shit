@@ -61,7 +61,9 @@ static void norm(VecU64 &a) {
 }
 
 void div_64bits_internal(const VecU64 &dividend, uint64_t divisor,
-                     VecU64 &quot, uint64_t &rem);
+                         VecU64 &quot, uint64_t &rem);
+
+void mul_64bits_internal(const VecU64 &a, uint64_t b, VecU64 &out);
 } // namespace internal
 } // namespace lll
 

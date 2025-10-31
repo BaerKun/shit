@@ -3,9 +3,9 @@
 namespace lll {
 using namespace internal;
 
-void neg(const Integer &a, Integer &out) {
-  out.neg = !(a.zero() || a.neg);
-  out.abs_val = a.abs_val;
+void Integer::opp(const Integer &a, Integer &out) {
+  out.neg_ = !(a.zero() || a.neg_);
+  out.abs_val_ = a.abs_val_;
 }
 
 static int ucmpr(const VecU64 &a, const VecU64 &b) {
@@ -22,13 +22,13 @@ static int ucmpr(const VecU64 &a, const VecU64 &b) {
   return 0;
 }
 
-int cmpr(const Integer &a, const Integer &b) {
-  if (a.neg) {
-    if (b.neg) return ucmpr(b.abs_val, a.abs_val);
+int Integer::cmpr(const Integer &a, const Integer &b) {
+  if (a.neg_) {
+    if (b.neg_) return ucmpr(b.abs_val_, a.abs_val_);
     return -1;
   }
-  if (b.neg) return 1;
-  return ucmpr(a.abs_val, b.abs_val);
+  if (b.neg_) return 1;
+  return ucmpr(a.abs_val_, b.abs_val_);
 }
 
 static void uadd(const VecU64 &a, const VecU64 &b, VecU64 &out) {
@@ -75,22 +75,22 @@ static void usub(const VecU64 &max, const VecU64 &min, VecU64 &out) {
   else norm_top(out);
 }
 
-void add(const Integer &a, const Integer &b, Integer &out) {
-  const VecU64 &abs_a = a.abs_val;
-  const VecU64 &abs_b = b.abs_val;
+void Integer::add(const Integer &a, const Integer &b, Integer &out) {
+  const VecU64 &abs_a = a.abs_val_;
+  const VecU64 &abs_b = b.abs_val_;
 
-  if (a.neg == b.neg) {
-    uadd(abs_a, abs_b, out.abs_val);
-    out.neg = a.neg;
+  if (a.neg_ == b.neg_) {
+    uadd(abs_a, abs_b, out.abs_val_);
+    out.neg_ = a.neg_;
   } else {
     switch (ucmpr(abs_a, abs_b)) {
     case 1:
-      out.neg = a.neg;
-      usub(abs_a, abs_b, out.abs_val);
+      out.neg_ = a.neg_;
+      usub(abs_a, abs_b, out.abs_val_);
       break;
     case -1:
-      out.neg = b.neg;
-      usub(abs_b, abs_a, out.abs_val);
+      out.neg_ = b.neg_;
+      usub(abs_b, abs_a, out.abs_val_);
       break;
     default: // 0
       out = 0;
@@ -98,22 +98,22 @@ void add(const Integer &a, const Integer &b, Integer &out) {
   }
 }
 
-void sub(const Integer &a, const Integer &b, Integer &out) {
-  const VecU64 &abs_a = a.abs_val;
-  const VecU64 &abs_b = b.abs_val;
+void Integer::sub(const Integer &a, const Integer &b, Integer &out) {
+  const VecU64 &abs_a = a.abs_val_;
+  const VecU64 &abs_b = b.abs_val_;
 
-  if (a.neg != b.neg) {
-    uadd(abs_a, abs_b, out.abs_val);
-    out.neg = a.neg;
+  if (a.neg_ != b.neg_) {
+    uadd(abs_a, abs_b, out.abs_val_);
+    out.neg_ = a.neg_;
   } else {
     switch (ucmpr(abs_a, abs_b)) {
     case 1:
-      out.neg = a.neg;
-      usub(abs_a, abs_b, out.abs_val);
+      out.neg_ = a.neg_;
+      usub(abs_a, abs_b, out.abs_val_);
       break;
     case -1:
-      out.neg = !b.neg;
-      usub(abs_b, abs_a, out.abs_val);
+      out.neg_ = !b.neg_;
+      usub(abs_b, abs_a, out.abs_val_);
       break;
     default:
       out = 0;

@@ -27,10 +27,10 @@ static size_t to_string_base(uint64_t n, char *ptr, const bool leading_zero) {
 std::string Integer::to_string() const {
   if (zero()) return "0";
 
-  const size_t size = abs_val.size();
+  const size_t size = abs_val_.size();
   if (size == 1) {
-    std::string abs = std::to_string(abs_val[0]);
-    if (neg) return "-" + abs;
+    std::string abs = std::to_string(abs_val_[0]);
+    if (neg_) return "-" + abs;
     return abs;
   }
 
@@ -38,16 +38,16 @@ std::string Integer::to_string() const {
       static_cast<size_t>(static_cast<double>(size) * LOG10_2_64) + 3, '\0');
   char *ptr = &str[0];
 
-  VecU64 quot = abs_val;
+  VecU64 quot = abs_val_;
   uint64_t rem = 0;
   size_t i = -1, len = 0;
   do {
     div_64bits_internal(quot, BASE, quot, rem);
     len = to_string_base(rem, ptr + ++i * MAX_DIGITS, !quot.empty());
   } while (!quot.empty());
-  if (neg) ptr[i * MAX_DIGITS + len] = '-';
+  if (neg_) ptr[i * MAX_DIGITS + len] = '-';
 
-  str.resize(i * MAX_DIGITS + len + neg);
+  str.resize(i * MAX_DIGITS + len + neg_);
   std::reverse(str.begin(),
                str.begin() + static_cast<int64_t>(str.size()));
   return str;
