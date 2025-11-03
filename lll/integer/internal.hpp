@@ -60,10 +60,10 @@ static void norm(VecU64 &a) {
   a.resize(i + 1);
 }
 
-void div_64bits_internal(const VecU64 &dividend, uint64_t divisor,
-                         VecU64 &quot, uint64_t &rem);
-
-void mul_64bits_internal(const VecU64 &a, uint64_t b, VecU64 &out);
+void uadd_64bits_(const VecU64 &a, uint64_t b, VecU64 &out);
+void usub_64bits_(const VecU64 &a, uint64_t b, VecU64 &out);
+void umul_64bits_(const VecU64 &a, uint64_t b, VecU64 &out);
+void udiv_64bits_(const VecU64 &ddd, uint64_t dsr, VecU64 &quot, uint64_t &rem);
 } // namespace internal
 } // namespace lll
 

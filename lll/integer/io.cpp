@@ -10,6 +10,10 @@ using namespace internal;
 constexpr uint64_t MAX_DIGITS = 19;
 constexpr uint64_t BASE = 10000000000000000000llu; // 10^19
 
+Integer::Integer(const std::string &value) {
+
+}
+
 static size_t to_string_base(uint64_t n, char *ptr, const bool leading_zero) {
   size_t i;
   for (i = 0; n; i++) {
@@ -42,7 +46,7 @@ std::string Integer::to_string() const {
   uint64_t rem = 0;
   size_t i = -1, len = 0;
   do {
-    div_64bits_internal(quot, BASE, quot, rem);
+    udiv_64bits_(quot, BASE, quot, rem);
     len = to_string_base(rem, ptr + ++i * MAX_DIGITS, !quot.empty());
   } while (!quot.empty());
   if (neg_) ptr[i * MAX_DIGITS + len] = '-';

@@ -31,29 +31,16 @@ static inline uint64_t div128(const uint64_t high, const uint64_t low,
 #endif
 }
 
-void internal::div_64bits_internal(const VecU64 &dividend,
-                                   const uint64_t divisor,
-                                   VecU64 &quot, uint64_t &rem) {
-  VecU64 quot_tmp(dividend.size());
+void internal::udiv_64bits_(const VecU64 &ddd, const uint64_t dsr,
+                            VecU64 &quot, uint64_t &rem) {
+  VecU64 quot_tmp(ddd.size());
   uint64_t high = 0;
-  for (size_t i = dividend.size(); i--;) {
-    quot_tmp[i] = div128(high, dividend[i], divisor, high);
+  for (size_t i = ddd.size(); i--;) {
+    quot_tmp[i] = div128(high, ddd[i], dsr, high);
   }
   norm(quot_tmp);
   quot = std::move(quot_tmp);
   rem = high;
-}
-
-void Integer::div_64bits(const Integer &a, const int64_t b, Integer &quot,
-                         int64_t &rem) {
-  if (b == 0) throw std::runtime_error("Division by zero");
-
-  uint64_t rem_u;
-  div_64bits_internal(a.abs_val_, std::abs(b), quot.abs_val_, rem_u);
-
-  quot.neg_ = !quot.zero() && a.neg_ ^ (b < 0);
-  if (a.neg_) rem_u = -rem_u;
-  rem = static_cast<int64_t>(rem_u);
 }
 
 static void divided_by_lll(const VecU64 &dividend, const VecU64 &divisor,
@@ -134,11 +121,22 @@ static void div_impl(const VecU64 &dividend, const VecU64 &divisor,
 
   if (n == 1) {
     uint64_t rem_64bits;
-    div_64bits_internal(dividend, divisor[0], quot, rem_64bits);
+    udiv_64bits_(dividend, divisor[0], quot, rem_64bits);
     assign64(rem, rem_64bits);
   } else {
     divided_by_lll(dividend, divisor, quot, rem);
   }
+}
+
+void Integer::div_64bits(const Integer &a, const int64_t b, Integer &quot,
+                         int64_t &rem) {
+  if (b == 0) throw std::runtime_error("Division by zero");
+
+  uint64_t rem_u;
+  udiv_64bits_(a.abs_val_, std::abs(b), quot.abs_val_, rem_u);
+
+  quot.neg_ = !quot.zero() && a.neg_ ^ (b < 0);
+  rem = static_cast<int64_t>(a.neg_ ? -rem_u : rem_u);
 }
 
 void Integer::div(const Integer &a, const Integer &b, Integer &quot,

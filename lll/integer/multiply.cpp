@@ -3,8 +3,7 @@
 namespace lll {
 using namespace internal;
 
-void internal::mul_64bits_internal(const VecU64 &a, const uint64_t b,
-                                   VecU64 &out) {
+void internal::umul_64bits_(const VecU64 &a, const uint64_t b, VecU64 &out) {
   VecU64 tmp(a.size() + 1);
   uint64_t high, low, carry = 0;
   for (uint64_t i = 0; i < a.size(); i++) {
@@ -16,16 +15,6 @@ void internal::mul_64bits_internal(const VecU64 &a, const uint64_t b,
   else tmp.pop_back();
   out = std::move(tmp);
 }
-
-void Integer::mul_64bits(const Integer &a, const int64_t b, Integer &out) {
-  if (a.zero() || b == 0) {
-    out = 0;
-    return;
-  }
-  mul_64bits_internal(a.abs_val_, std::abs(b), out.abs_val_);
-  out.neg_ = a.neg_ ^ (b < 0);
-}
-
 
 static void grade_school(const VecU64 &a, const VecU64 &b, VecU64 &out) {
   const size_t size_a = a.size();
@@ -43,6 +32,15 @@ static void grade_school(const VecU64 &a, const VecU64 &b, VecU64 &out) {
   }
   norm_top(tmp);
   out = std::move(tmp);
+}
+
+void Integer::mul_64bits(const Integer &a, const int64_t b, Integer &out) {
+  if (a.zero() || b == 0) {
+    out = 0;
+    return;
+  }
+  umul_64bits_(a.abs_val_, std::abs(b), out.abs_val_);
+  out.neg_ = a.neg_ ^ (b < 0);
 }
 
 void Integer::mul(const Integer &a, const Integer &b, Integer &out) {
