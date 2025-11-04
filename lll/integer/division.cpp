@@ -33,14 +33,13 @@ static inline uint64_t div128(const uint64_t high, const uint64_t low,
 
 void internal::udiv_64bits_(const VecU64 &ddd, const uint64_t dsr,
                             VecU64 &quot, uint64_t &rem) {
-  VecU64 quot_tmp(ddd.size());
-  uint64_t high = 0;
-  for (size_t i = ddd.size(); i--;) {
-    quot_tmp[i] = div128(high, ddd[i], dsr, high);
+  const size_t size = ddd.size();
+  rem = 0;
+  quot.resize(size);
+  for (size_t i = size; i--;) {
+    quot[i] = div128(rem, ddd[i], dsr, rem);
   }
-  norm(quot_tmp);
-  quot = std::move(quot_tmp);
-  rem = high;
+  norm_top(quot);
 }
 
 static void divided_by_lll(const VecU64 &dividend, const VecU64 &divisor,

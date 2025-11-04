@@ -4,16 +4,17 @@ namespace lll {
 using namespace internal;
 
 void internal::umul_64bits_(const VecU64 &a, const uint64_t b, VecU64 &out) {
-  VecU64 tmp(a.size() + 1);
+  const size_t size = a.size();
   uint64_t high, low, carry = 0;
-  for (uint64_t i = 0; i < a.size(); i++) {
+
+  out.resize(size + 1);
+  for (uint64_t i = 0; i < size; i++) {
     mul64(a[i], b, high, low);
-    tmp[i] = add64(tmp[i], low, carry, carry);
+    out[i] = add64(low, carry, 0, carry);
     carry += high;
   }
-  if (carry) tmp.back() = carry;
-  else tmp.pop_back();
-  out = std::move(tmp);
+  if (carry) out.back() = carry;
+  else out.pop_back();
 }
 
 static void grade_school(const VecU64 &a, const VecU64 &b, VecU64 &out) {

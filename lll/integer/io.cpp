@@ -15,12 +15,11 @@ Integer::Integer(const std::string &value) {
 }
 
 static size_t to_string_base(uint64_t n, char *ptr, const bool leading_zero) {
-  size_t i;
-  for (i = 0; n; i++) {
-    const uint64_t digit = n % 10;
+  size_t i = 0;
+  do {
+    ptr[i++] = static_cast<char>('0' + n % 10);
     n /= 10;
-    ptr[i] = static_cast<char>(digit + '0');
-  }
+  } while (n);
   if (leading_zero) {
     memset(ptr + i, '0', MAX_DIGITS - i);
     return MAX_DIGITS;
@@ -43,15 +42,17 @@ std::string Integer::to_string() const {
   char *ptr = &str[0];
 
   VecU64 quot = abs_val_;
-  uint64_t rem = 0;
-  size_t i = -1, len = 0;
-  do {
+  uint64_t rem = 0, len = 0;
+  for (char *p = ptr;;) {
     udiv_64bits_(quot, BASE, quot, rem);
-    len = to_string_base(rem, ptr + ++i * MAX_DIGITS, !quot.empty());
-  } while (!quot.empty());
-  if (neg_) ptr[i * MAX_DIGITS + len] = '-';
+    const bool quot_zero = quot.empty();
+    len += to_string_base(rem, p, !quot_zero);
+    p += MAX_DIGITS;
+    if (quot_zero) break;
+  }
+  if (neg_) ptr[len] = '-';
 
-  str.resize(i * MAX_DIGITS + len + neg_);
+  str.resize(len + neg_);
   std::reverse(str.begin(),
                str.begin() + static_cast<int64_t>(str.size()));
   return str;
