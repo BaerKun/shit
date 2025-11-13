@@ -70,12 +70,12 @@ void internal::uadd_64bits_(const VecU64 &a, const uint64_t b, VecU64 &out) {
   out[0] = add64(a[0], b, 0, carry);
 
   for (size_t i = 1; i <= size_a; i++) {
-    if (carry) {
-      out[i] = add64(a[i], 0, carry, carry);
-      continue;
+    if (carry == 0) {
+      memcpy(out.data() + i, a.data() + i, (size_a - i) * 8);
+      out.pop_back();
+      break;
     }
-    memcpy(out.data() + i, a.data() + i, (size_a - i) * 8);
-    out.pop_back();
+    out[i] = add64(a[i], 0, carry, carry);
   }
 }
 
@@ -93,11 +93,11 @@ static void uadd(const VecU64 &a, const VecU64 &b, VecU64 &out) {
 
   for (size_t i = size_min; i <= size_max; i++) {
     if (carry) {
-      out[i] = add64(a[i], 0, carry, carry);
-      continue;
+      memcpy(out.data() + i, a.data() + i, (size_max - i) * 8);
+      out.pop_back();
+      break;
     }
-    memcpy(out.data() + i, a.data() + i, (size_max - i) * 8);
-    out.pop_back();
+    out[i] = add64(a[i], 0, carry, carry);
   }
 }
 

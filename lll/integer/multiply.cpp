@@ -51,7 +51,6 @@ void Integer::mul(const Integer &a, const Integer &b, Integer &out) {
   }
 
   grade_school(a.abs_val_, b.abs_val_, out.abs_val_);
-
   out.neg_ = a.neg_ ^ b.neg_;
 }
 } // namespace lll
