@@ -8,7 +8,7 @@ void Integer::opp(const Integer &a, Integer &out) {
   out.abs_val_ = a.abs_val_;
 }
 
-static int ucmpr_64bits_(const VecU64 &a, const uint64_t b) {
+static int ucmp_64bits_(const VecU64 &a, const uint64_t b) {
   const size_t size_a = a.size();
   const size_t size_b = b != 0;
 
@@ -31,20 +31,20 @@ static int ucmpr(const VecU64 &a, const VecU64 &b) {
   return 0;
 }
 
-int Integer::cmpr_64bits(const Integer &a, const int64_t b) {
+int Integer::cmp_64bits(const Integer &a, const int64_t b) {
   const VecU64 &abs_a = a.abs_val_;
   const uint64_t abs_b = std::abs(b);
 
   if (a.neg_) {
-    if (b < 0) return -ucmpr_64bits_(abs_a, abs_b);
+    if (b < 0) return -ucmp_64bits_(abs_a, abs_b);
     return -1;
   }
   if (b < 0) return 1;
-  return ucmpr_64bits_(abs_a, abs_b);
+  return ucmp_64bits_(abs_a, abs_b);
 }
 
 
-int Integer::cmpr(const Integer &a, const Integer &b) {
+int Integer::cmp(const Integer &a, const Integer &b) {
   if (a.neg_) {
     if (b.neg_) return ucmpr(b.abs_val_, a.abs_val_);
     return -1;
@@ -157,7 +157,7 @@ void Integer::add_64bits(const Integer &a, const int64_t b, Integer &out) {
     out.neg_ = a.neg_;
     return;
   }
-  switch (ucmpr_64bits_(abs_a, abs_b)) {
+  switch (ucmp_64bits_(abs_a, abs_b)) {
   case 1:
     usub_64bits_(abs_a, abs_b, abs_o);
     out.neg_ = a.neg_;
@@ -206,7 +206,7 @@ void Integer::sub_64bits(const Integer &a, const int64_t b, Integer &out) {
     out.neg_ = a.neg_;
     return;
   }
-  switch (ucmpr_64bits_(abs_a, abs_b)) {
+  switch (ucmp_64bits_(abs_a, abs_b)) {
   case 1:
     usub_64bits_(abs_a, abs_b, abs_o);
     out.neg_ = a.neg_;

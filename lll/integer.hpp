@@ -33,10 +33,24 @@ public:
 
   std::string to_string() const;
 
-  Integer divide(const Integer &other, Integer &rem) const {
-    Integer quot;
-    div(*this, other, quot, rem);
-    return quot;
+  bool operator<(const Integer &other) const {
+    return cmp(*this, other) < 0;
+  }
+
+  bool operator>(const Integer &other) const {
+    return cmp(*this, other) > 0;
+  }
+
+  bool operator==(const Integer &other) const {
+    return cmp(*this, other) == 0;
+  }
+
+  bool operator<=(const Integer &other) const {
+    return cmp(*this, other) <= 0;
+  }
+
+  bool operator>=(const Integer &other) const {
+    return cmp(*this, other) >= 0;
   }
 
   Integer operator++(int) = delete;
@@ -102,6 +116,18 @@ public:
     return rem;
   }
 
+  Integer div(const Integer &other, Integer &rem) const {
+    Integer quot;
+    div(*this, other, quot, rem);
+    return quot;
+  }
+
+  Integer pow(const uint64_t exponent) const {
+    Integer out;
+    pow(*this, exponent, out);
+    return out;
+  }
+
   friend std::istream &operator>>(std::istream &is, Integer &a);
 
   friend std::ostream &operator<<(std::ostream &os, const Integer &a) {
@@ -109,7 +135,7 @@ public:
   }
 
   // 1: a > b; 0: a == b; -1: a < b
-  static int cmpr(const Integer &a, const Integer &b);
+  static int cmp(const Integer &a, const Integer &b);
   // -a
   static void opp(const Integer &a, Integer &out);
   // a + b
@@ -121,8 +147,9 @@ public:
   // quot = a / b, rem = a % b
   static void div(const Integer &a, const Integer &b, Integer &quot,
                   Integer &rem);
+  static void pow(const Integer &a, uint64_t b, Integer &out);
 
-  static int cmpr_64bits(const Integer &a, int64_t b);
+  static int cmp_64bits(const Integer &a, int64_t b);
   static void add_64bits(const Integer &a, int64_t b, Integer &out);
   static void sub_64bits(const Integer &a, int64_t b, Integer &out);
   static void mul_64bits(const Integer &a, int64_t b, Integer &out);

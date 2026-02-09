@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 add_library(lll_int
         integer/division.cpp
         integer/multiply.cpp
+        integer/power.cpp
         integer/simply.cpp
         integer/io.cpp)
 

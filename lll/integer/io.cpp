@@ -1,4 +1,5 @@
 #include "internal.hpp"
+#include <cmath>
 
 namespace lll {
 using namespace internal;
