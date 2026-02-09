@@ -5,8 +5,8 @@ namespace lll {
 using namespace internal;
 
 // n != 0
-static inline unsigned nlz64(uint64_t n) {
-  unsigned m = 1;
+static inline uint64_t nlz64(uint64_t n) {
+  uint64_t m = 1;
   // clang-format off
   if (n >> 32 == 0) { m += 32; n <<= 32; }
   if (n >> 48 == 0) { m += 16; n <<= 16; }
@@ -31,8 +31,8 @@ static inline uint64_t div128(const uint64_t high, const uint64_t low,
 #endif
 }
 
-void internal::udiv_64bits_(const VecU64 &ddd, const uint64_t dsr,
-                            VecU64 &quot, uint64_t &rem) {
+void internal::udiv_64bits_(const VecU64 &ddd, const uint64_t dsr, VecU64 &quot,
+                            uint64_t &rem) {
   const size_t size = ddd.size();
   rem = 0;
   quot.resize(size);
@@ -42,12 +42,21 @@ void internal::udiv_64bits_(const VecU64 &ddd, const uint64_t dsr,
   norm_top(quot);
 }
 
-static void divided_by_lll(const VecU64 &dividend, const VecU64 &divisor,
-                           VecU64 &quot, VecU64 &rem) {
+static void umod_64bits_(const VecU64 &ddd, const uint64_t dsr, uint64_t &rem) {
+  const size_t size = ddd.size();
+  rem = 0;
+  for (size_t i = size; i--;) {
+    div128(rem, ddd[i], dsr, rem);
+  }
+}
+
+static void shift_operands(const VecU64 &dividend, const VecU64 &divisor,
+                           VecU64 &ddd, VecU64 &dsr, const uint64_t shift) {
   const size_t m = dividend.size();
   const size_t n = divisor.size();
-  const unsigned shift = nlz64(divisor[n - 1]);
-  VecU64 ddd(m + 1), dsr(n);
+
+  ddd.resize(m + 1);
+  dsr.resize(n);
 
   ddd[m] = dividend[m - 1] >> (64 - shift);
   for (size_t i = m - 1; i; i--) {
@@ -59,8 +68,11 @@ static void divided_by_lll(const VecU64 &dividend, const VecU64 &divisor,
     dsr[i] = (divisor[i] << shift) | (divisor[i - 1] >> (64 - shift));
   }
   dsr[0] = divisor[0] << shift;
+}
 
-  quot.resize(m - n + 1);
+static void div_lll_main(VecU64 &ddd, const VecU64 &dsr, VecU64 *quot) {
+  const size_t m = ddd.size() - 1;
+  const size_t n = dsr.size();
 
   const uint64_t dsr_top1 = dsr[n - 1];
   const uint64_t dsr_top2 = dsr[n - 2];
@@ -95,56 +107,110 @@ static void divided_by_lll(const VecU64 &dividend, const VecU64 &divisor,
       }
       ddd[i + n] += carry;
     }
-    quot[i] = q_hat;
+    if (quot) quot->at(i) = q_hat;
   } while (i--);
-
-  rem.resize(n);
-  for (i = 0; i < n; i++) {
-    rem[i] = (ddd[i] >> shift) | (ddd[i + 1] << (64 - shift));
-  }
-
-  norm_top(quot);
-  norm(rem);
 }
 
-static void div_impl(const VecU64 &dividend, const VecU64 &divisor,
-                     VecU64 &quot, VecU64 &rem) {
+static void div_lll(const VecU64 &dividend, const VecU64 &divisor, VecU64 &quot,
+                    VecU64 *rem) {
   const size_t m = dividend.size();
   const size_t n = divisor.size();
-
   if (m < n) {
     assign64(quot, 0);
+    if (rem) *rem = dividend;
+    return;
+  }
+
+  VecU64 ddd, dsr;
+  const uint64_t shift = nlz64(divisor[n - 1]);
+  shift_operands(dividend, divisor, ddd, dsr, shift);
+
+  quot.resize(m - n + 1);
+  div_lll_main(ddd, dsr, &quot);
+  norm_top(quot);
+
+  if (rem) {
+    rem->resize(n);
+    for (size_t i = 0; i < n; i++) {
+      rem->at(i) = (ddd[i] >> shift) | (ddd[i + 1] << (64 - shift));
+    }
+    norm(*rem);
+  }
+}
+
+static void mod_lll(const VecU64 &dividend, const VecU64 &divisor, VecU64 &rem) {
+  const size_t m = dividend.size();
+  const size_t n = divisor.size();
+  if (m < n) {
     rem = dividend;
     return;
   }
 
-  if (n == 1) {
-    uint64_t rem_64bits;
-    udiv_64bits_(dividend, divisor[0], quot, rem_64bits);
-    assign64(rem, rem_64bits);
-  } else {
-    divided_by_lll(dividend, divisor, quot, rem);
+  VecU64 ddd, dsr;
+  const uint64_t shift = nlz64(divisor[n - 1]);
+  shift_operands(dividend, divisor, ddd, dsr, shift);
+
+  div_lll_main(ddd, dsr, nullptr);
+
+  rem.resize(n);
+  for (size_t i = 0; i < n; i++) {
+    rem.at(i) = (ddd[i] >> shift) | (ddd[i + 1] << (64 - shift));
   }
+  norm(rem);
 }
 
 void Integer::div_64bits(const Integer &a, const int64_t b, Integer &quot,
-                         int64_t &rem) {
-  if (b == 0) throw std::runtime_error("Division by zero");
+                         int64_t *rem) {
+  if (b == 0) throw std::domain_error("Division by zero");
 
   uint64_t rem_u;
   udiv_64bits_(a.abs_val_, std::abs(b), quot.abs_val_, rem_u);
 
   quot.neg_ = !quot.zero() && a.neg_ ^ (b < 0);
-  rem = static_cast<int64_t>(a.neg_ ? -rem_u : rem_u);
+  if (rem) *rem = static_cast<int64_t>(a.neg_ ? -rem_u : rem_u);
 }
 
 void Integer::div(const Integer &a, const Integer &b, Integer &quot,
-                  Integer &rem) {
-  if (b.zero()) throw std::runtime_error("Division by zero");
+                  Integer *rem) {
+  if (b.zero()) throw std::domain_error("Division by zero");
 
-  div_impl(a.abs_val_, b.abs_val_, quot.abs_val_, rem.abs_val_);
+  const VecU64 &dividend = a.abs_val_;
+  const VecU64 &divisor = b.abs_val_;
+
+  if (divisor.size() == 1) {
+    uint64_t rem_64bits;
+    udiv_64bits_(dividend, divisor[0], quot.abs_val_, rem_64bits);
+    if (rem) assign64(rem->abs_val_, rem_64bits);
+  } else {
+    div_lll(dividend, divisor, quot.abs_val_, rem ? &rem->abs_val_ : nullptr);
+  }
 
   quot.neg_ = !quot.zero() && a.neg_ ^ b.neg_;
-  rem.neg_ = !rem.zero() && a.neg_;
+  if (rem) rem->neg_ = !rem->zero() && a.neg_;
+}
+
+void Integer::mod_64bits(const Integer &a, const int64_t b, int64_t &out) {
+  if (b == 0) throw std::domain_error("Division by zero");
+
+  uint64_t rem_u;
+  umod_64bits_(a.abs_val_, std::abs(b), rem_u);
+  out = static_cast<int64_t>(a.neg_ ? -rem_u : rem_u);
+}
+
+void Integer::mod(const Integer &a, const Integer &b, Integer &out) {
+  if (b.zero()) throw std::domain_error("Division by zero");
+
+  const VecU64 &dividend = a.abs_val_;
+  const VecU64 &divisor = b.abs_val_;
+
+  if (divisor.size() == 1) {
+    uint64_t rem_64bits;
+    umod_64bits_(dividend, divisor[0], rem_64bits);
+    assign64(out.abs_val_, rem_64bits);
+  } else {
+    mod_lll(dividend, divisor, out.abs_val_);
+  }
+
+  out.neg_ = !out.zero() && a.neg_;
 }
 } // namespace lll

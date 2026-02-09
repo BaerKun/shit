@@ -3,12 +3,15 @@ project(lll)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_library(lll_int
-        integer/division.cpp
-        integer/multiply.cpp
-        integer/power.cpp
-        integer/simply.cpp
-        integer/io.cpp)
+set(SRC_LLL_INTEGER
+    integer/division.cpp
+    integer/math.cpp
+    integer/multiply.cpp
+    integer/simply.cpp
+    integer/io.cpp
+)
+
+add_library(lll ${SRC_LLL_INTEGER})
 
 add_executable(test _test.cpp)
-target_link_libraries(test PRIVATE lll_int)
+target_link_libraries(test PRIVATE lll)
