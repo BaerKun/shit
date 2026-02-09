@@ -9,22 +9,19 @@ void Integer::opp(const Integer &a, Integer &out) {
 }
 
 static int ucmp_64bits_(const VecU64 &a, const uint64_t b) {
-  const size_t size_a = a.size();
-  const size_t size_b = b != 0;
-
-  if (size_a > size_b) return 1;
-  if (size_b > size_a) return -1;
-  return (a[0] >= b) - (a[0] <= b);
+  if (a.size() > 1) return 1;
+  const uint64_t a_v = a.empty() ? 0 : a[0];
+  return (a_v > b) - (a_v < b);
 }
 
-static int ucmpr(const VecU64 &a, const VecU64 &b) {
+static int ucmp(const VecU64 &a, const VecU64 &b) {
   const size_t size_a = a.size();
   const size_t size_b = b.size();
 
   if (size_a > size_b) return 1;
   if (size_b > size_a) return -1;
 
-  for (size_t i = size_a; i--;) {
+  for (size_t i = 0; i < size_a; i++) {
     if (a[i] > b[i]) return 1;
     if (a[i] < b[i]) return -1;
   }
@@ -46,11 +43,11 @@ int Integer::cmp_64bits(const Integer &a, const int64_t b) {
 
 int Integer::cmp(const Integer &a, const Integer &b) {
   if (a.neg_) {
-    if (b.neg_) return ucmpr(b.abs_val_, a.abs_val_);
+    if (b.neg_) return ucmp(b.abs_val_, a.abs_val_);
     return -1;
   }
   if (b.neg_) return 1;
-  return ucmpr(a.abs_val_, b.abs_val_);
+  return ucmp(a.abs_val_, b.abs_val_);
 }
 
 void internal::uadd_64bits_(const VecU64 &a, const uint64_t b, VecU64 &out) {
@@ -92,12 +89,12 @@ static void uadd(const VecU64 &a, const VecU64 &b, VecU64 &out) {
   }
 
   for (size_t i = size_min; i <= size_max; i++) {
-    if (carry) {
-      memcpy(out.data() + i, a.data() + i, (size_max - i) * 8);
+    if (carry == 0) {
+      memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
       out.pop_back();
       break;
     }
-    out[i] = add64(a[i], 0, carry, carry);
+    out[i] = add64(max[i], 0, carry, carry);
   }
 }
 
@@ -181,7 +178,7 @@ void Integer::add(const Integer &a, const Integer &b, Integer &out) {
     out.neg_ = a.neg_;
     return;
   }
-  switch (ucmpr(abs_a, abs_b)) {
+  switch (ucmp(abs_a, abs_b)) {
   case 1:
     usub(abs_a, abs_b, abs_o);
     out.neg_ = a.neg_;
@@ -230,7 +227,7 @@ void Integer::sub(const Integer &a, const Integer &b, Integer &out) {
     out.neg_ = a.neg_;
     return;
   }
-  switch (ucmpr(abs_a, abs_b)) {
+  switch (ucmp(abs_a, abs_b)) {
   case 1:
     usub(abs_a, abs_b, abs_o);
     out.neg_ = a.neg_;
