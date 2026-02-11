@@ -1,23 +1,33 @@
 #include "math_func.hpp"
 #include <cmath>
+#include <queue>
+#include <vector>
 
 namespace mf {
 using NodeImpl = Node::Impl;
 using NodeImplSharedPtr = std::shared_ptr<Node::Impl>;
+using TopoOrder = std::vector<NodeImpl *>;
 
 struct Node::Impl {
-  NodeType node_tp;
-  OperationType op_tp;
+  NodeType type;
+  OperationType op;
   float value, grad;
-  std::shared_ptr<Impl> operand1, operand2;
+
+  bool visited;
+  int size;                       // count of self and sub-nodes
+  NodeImplSharedPtr opnd1, opnd2; // operand
+  NodeImplSharedPtr deriv;
 
   Impl(const NodeType node_t, const OperationType op_t, const float val)
-      : node_tp(node_t), op_tp(op_t), value(val), grad(0) {}
+      : type(node_t), op(op_t), value(val), grad(0), visited(false), size(1) {}
 
-  Impl(const OperationType op_t, const NodeImplSharedPtr &operand1,
-       const NodeImplSharedPtr &operand2)
-      : node_tp(OPERATION), op_tp(op_t), value(0), grad(0), operand1(operand1),
-        operand2(operand2) {}
+  Impl(const OperationType op_t, NodeImplSharedPtr operand1,
+       NodeImplSharedPtr operand2)
+      : type(OPERATION), op(op_t), value(0), grad(0), visited(false),
+        opnd1(std::move(operand1)), opnd2(std::move(operand2)) {
+    size = 1 + opnd1->size;
+    if (opnd2) size += opnd2->size;
+  }
 
   static NodeImplSharedPtr constant(const float val) {
     return std::make_shared<Impl>(CONSTANT, UNKNOWN, val);
@@ -41,12 +51,12 @@ static NodeImplSharedPtr sin_impl(const NodeImplSharedPtr &x);
 static NodeImplSharedPtr cos_impl(const NodeImplSharedPtr &x);
 static NodeImplSharedPtr tan_impl(const NodeImplSharedPtr &x);
 
-static float evaluate_impl(const NodeImpl *node);
-static float forward(NodeImpl *node);
-static void backward(NodeImpl *node, float grad);
-static NodeImplSharedPtr derivative_impl(const NodeImplSharedPtr &node);
+static TopoOrder reverse_topo_sort(const NodeImplSharedPtr &expr);
+static float forward_impl(const TopoOrder &order);
+static void backward_impl(const TopoOrder &order);
+static NodeImplSharedPtr derivative_impl(const TopoOrder &order);
 
-// ---
+// --- Node ---
 
 Node::Node(const NodeType node_t, const OperationType op_t, float val) {
   impl = std::make_shared<Impl>(node_t, op_t, val);
@@ -54,13 +64,6 @@ Node::Node(const NodeType node_t, const OperationType op_t, float val) {
 
 float Node::value() const { return impl->value; }
 float Node::grad() const { return impl->grad; }
-
-Node Node::derivative() const { return Node(derivative_impl(impl)); }
-float Node::evaluate() const { return evaluate_impl(impl.get()); }
-void Node::numeric_diff() const {
-  forward(impl.get());
-  backward(impl.get(), 1.f);
-}
 
 Node &Node::operator=(const float val) {
   impl->value = val;
@@ -81,7 +84,24 @@ Node pow(const Node &x, const Node &y) {
   return Node(pow_impl(x.impl, y.impl));
 }
 
-// ---
+// --- Function ---
+
+float Function::forward() {
+  if (reverse_topo.empty()) reverse_topo = reverse_topo_sort(expr.impl);
+  return forward_impl(reverse_topo);
+}
+
+void Function::backward() const {
+  if (reverse_topo.empty()) return;
+  backward_impl(reverse_topo);
+}
+
+Function Function::derivative() {
+  if (reverse_topo.empty()) reverse_topo = reverse_topo_sort(expr.impl);
+  return Node(derivative_impl(reverse_topo));
+}
+
+// --- end ---
 
 static NodeImplSharedPtr operator+(const NodeImplSharedPtr &lhs,
                                    const NodeImplSharedPtr &rhs) {
@@ -134,8 +154,29 @@ static NodeImplSharedPtr tan_impl(const NodeImplSharedPtr &x) {
   return std::make_shared<NodeImpl>(TAN, x, nullptr);
 }
 
-static float op_eval(const OperationType op_tp, const float x, const float y) {
-  switch (op_tp) {
+static void dfs(TopoOrder &order, NodeImpl *node) {
+  if (!node || node->visited) return;
+  node->visited = true;
+  dfs(order, node->opnd1.get());
+  dfs(order, node->opnd2.get());
+  order.push_back(node);
+}
+
+static TopoOrder reverse_topo_sort(const NodeImplSharedPtr &expr) {
+  TopoOrder order;
+  order.reserve(expr->size);
+  dfs(order, expr.get());
+
+  for (NodeImpl *node : order) node->visited = false;
+  return order;
+}
+
+static float node_eval(const NodeImpl *node) {
+  if (node->type != OPERATION) return node->value;
+
+  const float x = node->opnd1->value;
+  const float y = node->opnd2 ? node->opnd2->value : 0.f;
+  switch (node->op) {
   case ADD:
     return x + y;
   case NEG:
@@ -161,80 +202,76 @@ static float op_eval(const OperationType op_tp, const float x, const float y) {
   }
 }
 
-static float evaluate_impl(const NodeImpl *node) {
-  if (node->node_tp != OPERATION) return node->value;
-
-  const float x = evaluate_impl(node->operand1.get());
-  const float y = node->operand2 ? evaluate_impl(node->operand2.get()) : 0.f;
-  return op_eval(node->op_tp, x, y);
-}
-
-static float forward(NodeImpl *node) {
-  node->grad = 0.f;
-  if (node->node_tp != OPERATION) return node->value;
-
-  const float x = forward(node->operand1.get());
-  const float y = node->operand2 ? forward(node->operand2.get()) : 0.f;
-  return node->value = op_eval(node->op_tp, x, y);
+static float forward_impl(const TopoOrder &order) {
+  for (auto it = order.begin(); it != order.end(); ++it) {
+    NodeImpl *node = *it;
+    node->value = node_eval(node);
+  }
+  return order.back()->value;
 }
 
 static inline float square(const float x) { return x * x; }
 
-static void backward(NodeImpl *node, const float grad) {
-  if (node->node_tp != OPERATION) {
-    node->grad += grad;
-    return;
-  }
+static void backward_impl(const TopoOrder &order) {
+  for (NodeImpl *node : order) node->grad = 0.f;
 
-  NodeImpl *x = node->operand1.get();
-  NodeImpl *y = node->operand2.get();
-  switch (node->op_tp) {
-  case ADD:
-    backward(x, grad);
-    backward(y, grad);
-    return;
-  case NEG:
-    backward(x, -grad);
-    return;
-  case MUL:
-    backward(x, grad * y->value);
-    backward(y, grad * x->value);
-    return;
-  case INV:
-    backward(x, -grad / square(x->value));
-    return;
-  case POW:
-    backward(x, grad * node->value * y->value / x->value);
-    backward(y, grad * node->value * logf(x->value));
-    return;
-  case EXP:
-    backward(x, grad * node->value);
-    return;
-  case LOG:
-    backward(x, grad / x->value);
-    return;
-  case SIN:
-    backward(x, grad * cosf(x->value));
-    return;
-  case COS:
-    backward(x, -grad * sinf(x->value));
-    return;
-  case TAN:
-    backward(x, grad * (1.f + square(node->value)));
-  default:
-    break;
+  order.back()->grad = 1.f;
+  for (auto it = order.rbegin(); it != order.rend(); ++it) {
+    const NodeImpl *node = *it;
+    if (node->type == OPERATION) {
+      const float grad = node->grad;
+      const NodeImplSharedPtr &x = node->opnd1;
+      const NodeImplSharedPtr &y = node->opnd2;
+      switch (node->op) {
+      case ADD:
+        x->grad += grad;
+        y->grad += grad;
+        break;
+      case NEG:
+        x->grad -= grad;
+        break;
+      case MUL:
+        x->grad += grad * y->value;
+        y->grad += grad * x->value;
+        break;
+      case INV:
+        x->grad -= grad * square(node->value);
+        break;
+      case POW:
+        x->grad += grad * node->value * y->value / x->value;
+        y->grad += grad * node->value * logf(x->value);
+        break;
+      case EXP:
+        x->grad += grad * node->value;
+        break;
+      case LOG:
+        x->grad += grad / x->value;
+        break;
+      case SIN:
+        x->grad += grad * std::cosf(x->value);
+        break;
+      case COS:
+        x->grad -= grad * std::sinf(x->value);
+        break;
+      case TAN:
+        x->grad += grad * (1.f + square(node->value));
+        break;
+      default:
+        break;
+      }
+    }
   }
 }
 
-static NodeImplSharedPtr derivative_impl(const NodeImplSharedPtr &node) {
-  if (node->node_tp == CONSTANT) return NodeImpl::constant(0);
-  if (node->node_tp == VARIABLE) return NodeImpl::constant(1);
+static NodeImplSharedPtr node_deriv(const NodeImpl *node) {
+  if (node->type == CONSTANT) return NodeImpl::constant(0);
+  if (node->type == VARIABLE) return NodeImpl::constant(1);
 
-  const NodeImplSharedPtr &x = node->operand1;
-  const NodeImplSharedPtr &y = node->operand2;
-  const NodeImplSharedPtr dx(x ? derivative_impl(x) : nullptr);
-  const NodeImplSharedPtr dy(y ? derivative_impl(y) : nullptr);
-  switch (node->op_tp) {
+  const NodeImplSharedPtr &x = node->opnd1;
+  const NodeImplSharedPtr &y = node->opnd2;
+  const NodeImplSharedPtr dx = x->deriv;
+  const NodeImplSharedPtr dy(y ? y->deriv : nullptr);
+  switch (node->op) {
   case ADD:
     return dx + dy;
   case NEG:
@@ -244,8 +281,8 @@ static NodeImplSharedPtr derivative_impl(const NodeImplSharedPtr &node) {
   case INV:
     return -dx / pow_impl(x, NodeImpl::constant(2));
   case POW:
-    return dx * y * pow_impl(x, y + NodeImpl::constant(-1)) +
-           dy * log_impl(x) * pow_impl(x, y);
+    return (dx * y + dy * x * log_impl(x)) *
+           pow_impl(x, y - NodeImpl::constant(1));
   case EXP:
     return dx * exp_impl(x);
   case LOG:
@@ -253,12 +290,23 @@ static NodeImplSharedPtr derivative_impl(const NodeImplSharedPtr &node) {
   case SIN:
     return dx * cos_impl(x);
   case COS:
-    return -dx * cos_impl(x);
+    return -dx * sin_impl(x);
   case TAN:
     return dx / pow_impl(cos_impl(x), NodeImpl::constant(2));
   default:
     return nullptr;
   }
+}
+
+static NodeImplSharedPtr derivative_impl(const TopoOrder &order) {
+  for (auto it = order.begin(); it != order.end(); ++it) {
+    NodeImpl *node = *it;
+    node->deriv = node_deriv(node);
+  }
+
+  const NodeImplSharedPtr deriv = order.back()->deriv;
+  for (NodeImpl *node : order) node->deriv.reset();
+  return deriv;
 }
 
 } // namespace mf

@@ -2,6 +2,7 @@
 #define MF_MATH_FUNC_HPP
 
 #include <memory>
+#include <vector>
 
 namespace mf {
 
@@ -23,16 +24,12 @@ typedef enum {
 
 class Node {
 public:
-  struct Impl;
+  friend class Function;
 
-  Node(NodeType node_t, OperationType op_t, float val);
+  struct Impl;
 
   float value() const;
   float grad() const;
-
-  float evaluate() const;
-  void numeric_diff() const; // return evaluate(); get grad by x.grad()
-  Node derivative() const;
 
   Node &operator=(float val);
   Node operator-() const;
@@ -52,7 +49,9 @@ public:
   static Node variable() { return {VARIABLE, UNKNOWN, 0}; }
 
 private:
-  explicit Node(const std::shared_ptr<Impl> &impl) : impl(impl) {}
+  Node(NodeType node_t, OperationType op_t, float val);
+  explicit Node(std::shared_ptr<Impl> &&impl) : impl(std::move(impl)) {}
+
   std::shared_ptr<Impl> impl;
 };
 
@@ -62,6 +61,22 @@ Node log(const Node &x);
 Node sin(const Node &x);
 Node cos(const Node &x);
 Node tan(const Node &x);
+
+class Function {
+public:
+  Function(Node expr) // NOLINT(*-explicit-constructor)
+      : expr(std::move(expr)) {}
+
+  Node get_expr() const { return expr; }
+
+  float forward();
+  void backward() const;
+  Function derivative();
+
+private:
+  Node expr;
+  std::vector<Node::Impl *> reverse_topo;
+};
 
 } // namespace mf
 
