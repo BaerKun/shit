@@ -4,9 +4,9 @@
 #include "../integer.hpp"
 
 namespace lll {
-void pow(const Integer &a, uint64_t b, Integer &out);
-void gcd(const Integer &a, const Integer &b, Integer &out);
-void sqrt(const Integer &n, Integer &out);
+Integer pow(const Integer &a, uint64_t b);
+Integer gcd(const Integer &a, const Integer &b);
+Integer sqrt(const Integer &n);
 bool is_prime(const Integer &n);
 }
 

@@ -1,8 +1,6 @@
 #ifndef INTEGER_H
 #define INTEGER_H
 
-#include <cstdint>
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -58,6 +56,11 @@ public:
   bool operator>=(const Integer &other) const { return cmp(*this, other) >= 0; }
   bool operator>=(const int64_t &other) const {
     return cmp_64bits(*this, other) >= 0;
+  }
+
+  bool operator!=(const Integer &other) const { return cmp(*this, other) != 0; }
+  bool operator!=(const int64_t &other) const {
+    return cmp_64bits(*this, other) != 0;
   }
 
   Integer operator++(int) = delete;
@@ -211,7 +214,7 @@ public:
   static void mul_64bits(const Integer &a, int64_t b, Integer &out);
   static void mod_64bits(const Integer &a, int64_t b, int64_t &out);
   static void div_64bits(const Integer &a, int64_t b, Integer &quot,
-                         int64_t *rem=nullptr);
+                         int64_t *rem = nullptr);
 
 private:
   std::vector<uint64_t> abs_val_;

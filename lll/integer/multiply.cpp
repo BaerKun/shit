@@ -40,7 +40,7 @@ void Integer::mul_64bits(const Integer &a, const int64_t b, Integer &out) {
     out = 0;
     return;
   }
-  umul_64bits_(a.abs_val_, std::abs(b), out.abs_val_);
+  umul_64bits_(a.abs_val_, abs64(b), out.abs_val_);
   out.neg_ = a.neg_ ^ (b < 0);
 }
 

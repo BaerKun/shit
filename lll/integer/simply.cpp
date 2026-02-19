@@ -21,7 +21,7 @@ static int ucmp(const VecU64 &a, const VecU64 &b) {
   if (size_a > size_b) return 1;
   if (size_b > size_a) return -1;
 
-  for (size_t i = 0; i < size_a; i++) {
+  for (size_t i = size_a; i; i--) {
     if (a[i] > b[i]) return 1;
     if (a[i] < b[i]) return -1;
   }
@@ -30,7 +30,7 @@ static int ucmp(const VecU64 &a, const VecU64 &b) {
 
 int Integer::cmp_64bits(const Integer &a, const int64_t b) {
   const VecU64 &abs_a = a.abs_val_;
-  const uint64_t abs_b = std::abs(b);
+  const uint64_t abs_b = abs64(b);
 
   if (a.neg_) {
     if (b < 0) return -ucmp_64bits_(abs_a, abs_b);
@@ -39,7 +39,6 @@ int Integer::cmp_64bits(const Integer &a, const int64_t b) {
   if (b < 0) return 1;
   return ucmp_64bits_(abs_a, abs_b);
 }
-
 
 int Integer::cmp(const Integer &a, const Integer &b) {
   if (a.neg_) {
@@ -66,13 +65,18 @@ void internal::uadd_64bits_(const VecU64 &a, const uint64_t b, VecU64 &out) {
   out.resize(size_a + 1);
   out[0] = add64(a[0], b, 0, carry);
 
-  for (size_t i = 1; i <= size_a; i++) {
+  for (size_t i = 1; i < size_a; i++) {
     if (carry == 0) {
       memcpy(out.data() + i, a.data() + i, (size_a - i) * 8);
       out.pop_back();
-      break;
+      return;
     }
-    out[i] = add64(a[i], 0, carry, carry);
+    out[i] = add64(a[i], carry, 0, carry);
+  }
+  if (carry == 0) {
+    out.pop_back();
+  } else {
+    out[size_a] = 1;
   }
 }
 
@@ -88,13 +92,18 @@ static void uadd(const VecU64 &a, const VecU64 &b, VecU64 &out) {
     out[i] = add64(max[i], min[i], carry, carry);
   }
 
-  for (size_t i = size_min; i <= size_max; i++) {
+  for (size_t i = size_min; i < size_max; i++) {
     if (carry == 0) {
       memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
       out.pop_back();
-      break;
+      return;
     }
-    out[i] = add64(max[i], 0, carry, carry);
+    out[i] = add64(max[i], carry, 0, carry);
+  }
+  if (carry == 0) {
+    out.pop_back();
+  } else {
+    out[size_max] = 1;
   }
 }
 
@@ -115,11 +124,10 @@ void internal::usub_64bits_(const VecU64 &a, const uint64_t b, VecU64 &out) {
       memcpy(out.data() + i, a.data() + i, (size_a - i) * 8);
       return;
     }
-    out[i] = sub64(a[i], 0, borrow, borrow);
+    out[i] = sub64(a[i], borrow, 0, borrow);
   }
   norm_top(out);
 }
-
 
 static void usub(const VecU64 &max, const VecU64 &min, VecU64 &out) {
   const size_t size_max = max.size();
@@ -136,108 +144,68 @@ static void usub(const VecU64 &max, const VecU64 &min, VecU64 &out) {
       memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
       return;
     }
-    out[i] = sub64(max[i], 0, borrow, borrow);
+    out[i] = sub64(max[i], borrow, 0, borrow);
   }
 
-  if (size_max <= size_min + 1) norm(out);
-  else norm_top(out);
+  if (size_max <= size_min + 1)
+    norm(out);
+  else
+    norm_top(out);
+}
+
+static bool add_64bits_impl(const bool neg_a, const VecU64 &abs_a,
+                            const bool neg_b, const uint64_t abs_b,
+                            VecU64 &abs_o) {
+  if (neg_a == neg_b) {
+    uadd_64bits_(abs_a, abs_b, abs_o);
+    return neg_a;
+  }
+  switch (ucmp_64bits_(abs_a, abs_b)) {
+  case 1:
+    usub_64bits_(abs_a, abs_b, abs_o);
+    return neg_a;
+  case -1:
+    abs_o.assign(1, abs_a.empty() ? abs_b : abs_b - abs_a[0]);
+    return neg_b;
+  default: // 0
+    abs_o.clear();
+    return false;
+  }
+}
+
+static bool add_impl(const bool neg_a, const VecU64 &abs_a, const bool neg_b,
+                     const VecU64 &abs_b, VecU64 &abs_o) {
+  if (neg_a == neg_b) {
+    uadd(abs_a, abs_b, abs_o);
+    return neg_a;
+  }
+  switch (ucmp(abs_a, abs_b)) {
+  case 1:
+    usub(abs_a, abs_b, abs_o);
+    return neg_a;
+  case -1:
+    usub(abs_b, abs_a, abs_o);
+    return neg_b;
+  default: // 0
+    abs_o.clear();
+    return false;
+  }
 }
 
 void Integer::add_64bits(const Integer &a, const int64_t b, Integer &out) {
-  const VecU64 &abs_a = a.abs_val_;
-  const uint64_t abs_b = std::abs(b);
-  VecU64 &abs_o = out.abs_val_;
-  const bool neg_b = b < 0;
-
-  if (a.neg_ == neg_b) {
-    uadd_64bits_(abs_a, abs_b, abs_o);
-    out.neg_ = a.neg_;
-    return;
-  }
-  switch (ucmp_64bits_(abs_a, abs_b)) {
-  case 1:
-    usub_64bits_(abs_a, abs_b, abs_o);
-    out.neg_ = a.neg_;
-    break;
-  case -1:
-    abs_o.assign(1, abs_a.empty() ? abs_b : abs_b - abs_a[0]);
-    out.neg_ = neg_b;
-    break;
-  default: // 0
-    out = 0;
-  }
+  out.neg_ = add_64bits_impl(a.neg_, a.abs_val_, b < 0, abs64(b), out.abs_val_);
 }
 
 void Integer::add(const Integer &a, const Integer &b, Integer &out) {
-  const VecU64 &abs_a = a.abs_val_;
-  const VecU64 &abs_b = b.abs_val_;
-  VecU64 &abs_o = out.abs_val_;
-
-  if (a.neg_ == b.neg_) {
-    uadd(abs_a, abs_b, abs_o);
-    out.neg_ = a.neg_;
-    return;
-  }
-  switch (ucmp(abs_a, abs_b)) {
-  case 1:
-    usub(abs_a, abs_b, abs_o);
-    out.neg_ = a.neg_;
-    break;
-  case -1:
-    usub(abs_b, abs_a, abs_o);
-    out.neg_ = b.neg_;
-    break;
-  default: // 0
-    out = 0;
-  }
+  out.neg_ = add_impl(a.neg_, a.abs_val_, b.neg_, b.abs_val_, out.abs_val_);
 }
 
 void Integer::sub_64bits(const Integer &a, const int64_t b, Integer &out) {
-  const VecU64 &abs_a = a.abs_val_;
-  const uint64_t abs_b = std::abs(b);
-  VecU64 &abs_o = out.abs_val_;
-  const bool neg_b = b < 0;
-
-  if (a.neg_ != neg_b) {
-    uadd_64bits_(abs_a, abs_b, abs_o);
-    out.neg_ = a.neg_;
-    return;
-  }
-  switch (ucmp_64bits_(abs_a, abs_b)) {
-  case 1:
-    usub_64bits_(abs_a, abs_b, abs_o);
-    out.neg_ = a.neg_;
-    break;
-  case -1:
-    abs_o.assign(1, abs_a.empty() ? abs_b : abs_b - abs_a[0]);
-    out.neg_ = !neg_b;
-    break;
-  default:
-    out = 0;
-  }
+  out.neg_ =
+      add_64bits_impl(a.neg_, a.abs_val_, b >= 0, abs64(b), out.abs_val_);
 }
 
 void Integer::sub(const Integer &a, const Integer &b, Integer &out) {
-  const VecU64 &abs_a = a.abs_val_;
-  const VecU64 &abs_b = b.abs_val_;
-  VecU64 &abs_o = out.abs_val_;
-
-  if (a.neg_ != b.neg_) {
-    uadd(abs_a, abs_b, abs_o);
-    out.neg_ = a.neg_;
-    return;
-  }
-  switch (ucmp(abs_a, abs_b)) {
-  case 1:
-    usub(abs_a, abs_b, abs_o);
-    out.neg_ = a.neg_;
-    break;
-  case -1:
-    usub(abs_b, abs_a, abs_o);
-    out.neg_ = !b.neg_;
-    break;
-  default:
-    out = 0;
-  }
+  out.neg_ = add_impl(a.neg_, a.abs_val_, !b.neg_, b.abs_val_, out.abs_val_);
 }
 } // namespace lll

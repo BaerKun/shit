@@ -164,7 +164,7 @@ void Integer::div_64bits(const Integer &a, const int64_t b, Integer &quot,
   if (b == 0) throw std::domain_error("Division by zero");
 
   uint64_t rem_u;
-  udiv_64bits_(a.abs_val_, std::abs(b), quot.abs_val_, rem_u);
+  udiv_64bits_(a.abs_val_, abs64(b), quot.abs_val_, rem_u);
 
   quot.neg_ = !quot.zero() && a.neg_ ^ (b < 0);
   if (rem) *rem = static_cast<int64_t>(a.neg_ ? -rem_u : rem_u);
@@ -193,7 +193,7 @@ void Integer::mod_64bits(const Integer &a, const int64_t b, int64_t &out) {
   if (b == 0) throw std::domain_error("Division by zero");
 
   uint64_t rem_u;
-  umod_64bits_(a.abs_val_, std::abs(b), rem_u);
+  umod_64bits_(a.abs_val_, abs64(b), rem_u);
   out = static_cast<int64_t>(a.neg_ ? -rem_u : rem_u);
 }
 

@@ -1,32 +1,26 @@
 #include "math.hpp"
 
 namespace lll {
-void pow(const Integer &a, uint64_t b, Integer &out) {
-  if (b == 0) {
-    out = 1;
-    return;
-  }
+Integer pow(const Integer &a, uint64_t b) {
+  Integer out = 1;
+  if (b == 0) return out;
 
   Integer c = a;
-  out = 1;
   while (true) {
     if (b & 1) out *= c;
     b /= 2;
-    if (b == 0) break;
+    if (b == 0) return out;;
     c *= c;
   }
 }
 
-void gcd(const Integer &a, const Integer &b, Integer &out) {
+Integer gcd(const Integer &a, const Integer &b) {
   Integer ca = a.abs(), cb = b.abs(), c;
   Integer *pa = &ca, *pb = &cb, *pc = &c;
 
   while (true) {
     Integer::mod(*pa, *pb, *pc);
-    if (pc->zero()) {
-      out = *pb;
-      return;
-    }
+    if (pc->zero()) return std::move(*pb);
 
     Integer *pa_ = pa;
     pa = pb;
@@ -35,7 +29,7 @@ void gcd(const Integer &a, const Integer &b, Integer &out) {
   }
 }
 
-void sqrt(const Integer &n, Integer &out) {
+Integer sqrt(const Integer &n) {
   if (n.neg()) throw std::domain_error("n < 0.");
 
   Integer x = n;
@@ -48,7 +42,7 @@ void sqrt(const Integer &n, Integer &out) {
     y += x;
     y /= 2;
   }
-  out = x;
+  return x;
 }
 
 bool is_prime(const Integer &n) {
@@ -57,13 +51,10 @@ bool is_prime(const Integer &n) {
   Integer rem = n % 2;
   if (rem.zero()) return true;
 
-  Integer m(3);
-  Integer sqrt_n;
-  sqrt(n, sqrt_n);
-  while (m <= sqrt_n) {
+  const Integer sqrt_n = sqrt(n);
+  for (Integer m = 3; m <= sqrt_n; m += 2) {
     Integer::mod(n, m, rem);
     if (rem.zero()) return false;
-    m += 2;
   }
   return true;
 }
