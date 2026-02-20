@@ -21,7 +21,7 @@ static int ucmp(const VecU64 &a, const VecU64 &b) {
   if (size_a > size_b) return 1;
   if (size_b > size_a) return -1;
 
-  for (size_t i = size_a; i; i--) {
+  for (size_t i = size_a; i--;) {
     if (a[i] > b[i]) return 1;
     if (a[i] < b[i]) return -1;
   }
