@@ -4,11 +4,12 @@ project(lll)
 set(CMAKE_CXX_STANDARD 11)
 
 set(SRC_LLL_INTEGER
-    integer/division.cpp
-    integer/math.cpp
-    integer/multiply.cpp
-    integer/simply.cpp
-    integer/io.cpp
+        integer/bit.cpp
+        integer/division.cpp
+        integer/math.cpp
+        integer/multiply.cpp
+        integer/simply.cpp
+        integer/io.cpp
 )
 
 add_library(lll ${SRC_LLL_INTEGER})

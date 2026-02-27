@@ -14,7 +14,7 @@ static int ucmp_64bits_(const VecU64 &a, const uint64_t b) {
   return (a_v > b) - (a_v < b);
 }
 
-static int ucmp(const VecU64 &a, const VecU64 &b) {
+int internal::ucmp(const VecU64 &a, const VecU64 &b) {
   const size_t size_a = a.size();
   const size_t size_b = b.size();
 

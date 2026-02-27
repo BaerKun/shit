@@ -34,7 +34,7 @@ static void from_string_u(VecU64 &abs, const char *ptr, size_t size) {
   uadd_64bits_(abs, from_string_base(ptr, size), abs);
 }
 
-Integer::Integer(const std::string &value) {
+Integer::Integer(const std::string &value) : neg_(false) {
   if (value.empty()) return;
   const char *ptr = value.data();
   size_t size = value.size();
@@ -90,6 +90,13 @@ std::string Integer::to_string() const {
   str.resize(len + neg_);
   std::reverse(ptr, ptr + len);
   return str;
+}
+
+std::istream &operator>>(std::istream &is, Integer &a) {
+  std::string s;
+  is >> s;
+  a = Integer(s);
+  return is;
 }
 
 std::ostream &operator<<(std::ostream &os, const Integer &a) {

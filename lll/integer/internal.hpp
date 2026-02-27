@@ -10,27 +10,27 @@ namespace internal {
 // a + b + c, carry = 0, 1, 2
 static inline uint64_t add64(const uint64_t a, const uint64_t b,
                              const uint64_t c, uint64_t &carry) {
-  uint64_t sum = a + b;
-  const uint64_t carry1 = sum < b;
+  uint64_t res = a + b;
+  const uint64_t carry1 = res < b;
 
-  sum += c;
-  const uint64_t carry2 = sum < c;
+  res += c;
+  const uint64_t carry2 = res < c;
 
   carry = carry1 + carry2;
-  return sum;
+  return res;
 }
 
 // a - b - c, borrow = 0, 1, 2
 static inline uint64_t sub64(const uint64_t a, const uint64_t b,
                              const uint64_t c, uint64_t &borrow) {
   const uint64_t borrow1 = a < b;
-  uint64_t diff = a - b;
+  uint64_t res = a - b;
 
-  const uint64_t borrow2 = diff < c;
-  diff -= c;
+  const uint64_t borrow2 = res < c;
+  res -= c;
 
   borrow = borrow1 + borrow2;
-  return diff;
+  return res;
 }
 
 static inline void mul64(const uint64_t a, const uint64_t b, uint64_t &high,
@@ -64,6 +64,7 @@ static void norm(VecU64 &a) {
   a.resize(i + 1);
 }
 
+int ucmp(const VecU64 &a, const VecU64 &b);
 void uadd_64bits_(const VecU64 &a, uint64_t b, VecU64 &out);
 void usub_64bits_(const VecU64 &a, uint64_t b, VecU64 &out);
 void umul_64bits_(const VecU64 &a, uint64_t b, VecU64 &out);

@@ -1,5 +1,5 @@
-#ifndef INTEGER_H
-#define INTEGER_H
+#ifndef LLL_INTEGER_H
+#define LLL_INTEGER_H
 
 #include <string>
 #include <vector>
@@ -13,21 +13,21 @@ public:
   Integer &operator=(Integer &&other) = default;
 
   explicit Integer(const std::string &value);
+  std::string to_string() const;
 
   Integer(const int64_t value = 0) // NOLINT(*-explicit-constructor)
-    : abs_val_(value != 0, static_cast<uint64_t>(std::abs(value))),
-      neg_(value < 0) {
+    : neg_(value < 0),
+      abs_val_(value != 0, static_cast<uint64_t>(neg_ ? -value : value)) {
   }
 
   Integer &operator=(const int64_t value) {
-    abs_val_.assign(value != 0, static_cast<uint64_t>(std::abs(value)));
     neg_ = value < 0;
+    abs_val_.assign(value != 0, static_cast<uint64_t>(neg_ ? -value : value));
     return *this;
   }
 
   bool neg() const { return neg_; }
   bool zero() const { return abs_val_.empty(); }
-  std::string to_string() const;
 
   Integer abs() const {
     Integer res(*this);
@@ -229,10 +229,9 @@ public:
                          int64_t *rem = nullptr);
 
 private:
+  bool neg_;
   std::vector<uint64_t> abs_val_;
-  bool neg_ = false;
 };
-
 } // namespace lll
 
-#endif // INTEGER_H
+#endif // LLL_INTEGER_H
