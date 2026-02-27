@@ -1,4 +1,5 @@
 #include "math.hpp"
+#include <stdexcept>
 
 namespace lll {
 Integer pow(const Integer &a, uint64_t b) {

@@ -1,5 +1,6 @@
 #include "internal.hpp"
 #include <cmath>
+#include <iostream>
 
 namespace lll {
 using namespace internal;
@@ -89,5 +90,9 @@ std::string Integer::to_string() const {
   str.resize(len + neg_);
   std::reverse(ptr, ptr + len);
   return str;
+}
+
+std::ostream &operator<<(std::ostream &os, const Integer &a) {
+  return os << a.to_string();
 }
 }

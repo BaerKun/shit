@@ -15,8 +15,9 @@ public:
   explicit Integer(const std::string &value);
 
   Integer(const int64_t value = 0) // NOLINT(*-explicit-constructor)
-      : abs_val_(value != 0, static_cast<uint64_t>(std::abs(value))),
-        neg_(value < 0) {}
+    : abs_val_(value != 0, static_cast<uint64_t>(std::abs(value))),
+      neg_(value < 0) {
+  }
 
   Integer &operator=(const int64_t value) {
     abs_val_.assign(value != 0, static_cast<uint64_t>(std::abs(value)));
@@ -26,6 +27,7 @@ public:
 
   bool neg() const { return neg_; }
   bool zero() const { return abs_val_.empty(); }
+  std::string to_string() const;
 
   Integer abs() const {
     Integer res(*this);
@@ -34,31 +36,37 @@ public:
   }
 
   bool operator<(const Integer &other) const { return cmp(*this, other) < 0; }
+
   bool operator<(const int64_t other) const {
     return cmp_64bits(*this, other) < 0;
   }
 
   bool operator>(const Integer &other) const { return cmp(*this, other) > 0; }
+
   bool operator>(const int64_t &other) const {
     return cmp_64bits(*this, other) > 0;
   }
 
   bool operator==(const Integer &other) const { return cmp(*this, other) == 0; }
+
   bool operator==(const int64_t &other) const {
     return cmp_64bits(*this, other) == 0;
   }
 
   bool operator<=(const Integer &other) const { return cmp(*this, other) <= 0; }
+
   bool operator<=(const int64_t &other) const {
     return cmp_64bits(*this, other) <= 0;
   }
 
   bool operator>=(const Integer &other) const { return cmp(*this, other) >= 0; }
+
   bool operator>=(const int64_t &other) const {
     return cmp_64bits(*this, other) >= 0;
   }
 
   bool operator!=(const Integer &other) const { return cmp(*this, other) != 0; }
+
   bool operator!=(const int64_t &other) const {
     return cmp_64bits(*this, other) != 0;
   }
@@ -93,6 +101,12 @@ public:
     return *this;
   }
 
+  Integer operator-() const {
+    Integer out;
+    opp(*this, out);
+    return out;
+  }
+
   Integer operator-(const Integer &other) const {
     Integer out;
     sub(*this, other, out);
@@ -104,6 +118,7 @@ public:
     sub_64bits(*this, other, out);
     return out;
   }
+
   Integer &operator-=(const Integer &other) {
     sub(*this, other, *this);
     return *this;
@@ -186,11 +201,8 @@ public:
     return *this = out;
   }
 
-  std::string to_string() const;
   friend std::istream &operator>>(std::istream &is, Integer &a);
-  friend std::ostream &operator<<(std::ostream &os, const Integer &a) {
-    return os << a.to_string();
-  }
+  friend std::ostream &operator<<(std::ostream &os, const Integer &a);
 
   // 1: a > b; 0: a == b; -1: a < b
   static int cmp(const Integer &a, const Integer &b);
