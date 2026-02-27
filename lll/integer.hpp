@@ -201,6 +201,28 @@ public:
     return *this = out;
   }
 
+  Integer operator<<(const uint64_t other) const {
+    Integer out;
+    shl_abs(*this, other, out);
+    return out;
+  }
+
+  Integer &operator<<=(const uint64_t other) {
+    shl_abs(*this, other, *this);
+    return *this;
+  }
+
+  Integer operator>>(const uint64_t other) const {
+    Integer out;
+    shr_abs(*this, other, out);
+    return out;
+  }
+
+  Integer &operator>>=(const uint64_t other) {
+    shr_abs(*this, other, *this);
+    return *this;
+  }
+
   friend std::istream &operator>>(std::istream &is, Integer &a);
   friend std::ostream &operator<<(std::ostream &os, const Integer &a);
 
@@ -219,6 +241,10 @@ public:
   // quot = a / b, rem = a % b
   static void div(const Integer &a, const Integer &b, Integer &quot,
                   Integer *rem = nullptr);
+  // a * pow(2, b)
+  static void shl_abs(const Integer &a, uint64_t b, Integer &out);
+  // a / pow(2, b)
+  static void shr_abs(const Integer &a, uint64_t b, Integer &out);
 
   static int cmp_64bits(const Integer &a, int64_t b);
   static void add_64bits(const Integer &a, int64_t b, Integer &out);
