@@ -1,6 +1,8 @@
 #include "internal.hpp"
 #include <cmath>
+#include <cstring>
 #include <iostream>
+#include <algorithm>
 
 namespace lll {
 using namespace internal;

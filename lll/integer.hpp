@@ -1,6 +1,7 @@
 #ifndef LLL_INTEGER_H
 #define LLL_INTEGER_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -28,12 +29,9 @@ public:
 
   bool neg() const { return neg_; }
   bool zero() const { return abs_val_.empty(); }
-
-  Integer abs() const {
-    Integer res(*this);
-    res.neg_ = false;
-    return res;
-  }
+  uint64_t abs_low64() const { return zero() ? 0 : abs_val_[0]; }
+  Integer abs() const { return neg_ ? -*this : *this; }
+  uint64_t abs_ctz() const;
 
   bool operator<(const Integer &other) const { return cmp(*this, other) < 0; }
 

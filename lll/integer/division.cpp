@@ -4,18 +4,16 @@
 namespace lll {
 using namespace internal;
 
-// n != 0
-static inline uint64_t nlz64(uint64_t n) {
-  uint64_t m = 1;
-  // clang-format off
-  if (n >> 32 == 0) { m += 32; n <<= 32; }
-  if (n >> 48 == 0) { m += 16; n <<= 16; }
-  if (n >> 56 == 0) { m += 8;  n <<= 8;  }
-  if (n >> 60 == 0) { m += 4;  n <<= 4;  }
-  if (n >> 62 == 0) { m += 2;  n <<= 2;  }
-  // clang-format on
-  return m - (n >> 63);
+static inline uint64_t nlz64(const uint64_t n) {
+#ifdef _MSC_VER
+  unsigned long res;
+  _BitScanReverse64(&res, n);
+  return 63 - res;
+#elif defined(__GNUC__) || defined(__clang__)
+  return __builtin_clzll(n);
+#endif
 }
+
 
 // quotient should be always 64-bits.
 static inline uint64_t div128(const uint64_t high, const uint64_t low,

@@ -67,8 +67,9 @@ void internal::uadd_64bits_(const VecU64 &a, const uint64_t b, VecU64 &out) {
 
   for (size_t i = 1; i < size_a; i++) {
     if (carry == 0) {
-      if (out.data() == a.data()) return;
-      memcpy(out.data() + i, a.data() + i, (size_a - i) * 8);
+      if (out.data() != a.data()) {
+        memcpy(out.data() + i, a.data() + i, (size_a - i) * 8);
+      }
       out.pop_back();
       return;
     }
@@ -95,8 +96,9 @@ static void uadd(const VecU64 &a, const VecU64 &b, VecU64 &out) {
 
   for (size_t i = size_min; i < size_max; i++) {
     if (carry == 0) {
-      if (out.data() == max.data()) return;
-      memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
+      if (out.data() != max.data()) {
+        memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
+      }
       out.pop_back();
       return;
     }
@@ -123,8 +125,9 @@ void internal::usub_64bits_(const VecU64 &a, const uint64_t b, VecU64 &out) {
 
   for (size_t i = 1; i < size_a; i++) {
     if (borrow == 0) {
-      if (out.data() == a.data()) return;
-      memcpy(out.data() + i, a.data() + i, (size_a - i) * 8);
+      if (out.data() != a.data()) {
+        memcpy(out.data() + i, a.data() + i, (size_a - i) * 8);
+      }
       return;
     }
     out[i] = sub64(a[i], borrow, 0, borrow);
@@ -144,17 +147,16 @@ static void usub(const VecU64 &max, const VecU64 &min, VecU64 &out) {
 
   for (size_t i = size_min; i < size_max; i++) {
     if (borrow == 0) {
-      if (out.data() == max.data()) return;
-      memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
+      if (out.data() != max.data()) {
+        memcpy(out.data() + i, max.data() + i, (size_max - i) * 8);
+      }
       return;
     }
     out[i] = sub64(max[i], borrow, 0, borrow);
   }
 
-  if (size_max <= size_min + 1)
-    norm(out);
-  else
-    norm_top(out);
+  if (size_max <= size_min + 1) norm(out);
+  else norm_top(out);
 }
 
 static bool add_64bits_impl(const bool neg_a, const VecU64 &abs_a,

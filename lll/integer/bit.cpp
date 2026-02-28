@@ -1,7 +1,50 @@
 #include "internal.hpp"
+#include <cstring>
 
 namespace lll {
 using namespace internal;
+
+static uint64_t ctz64(const uint64_t n) {
+#ifdef _MSC_VER
+  unsigned long res;
+  _BitScanForward64(&res, n);
+  return res;
+#elif defined(__GNUC__) || defined(__clang__)
+  return __builtin_ctzll(n);
+#endif
+}
+
+uint64_t Integer::abs_ctz() const {
+  uint64_t i, res = 0;
+  for (i = 0; i < abs_val_.size() && !abs_val_[i]; i++) res += 64;
+  return res + ctz64(abs_val_[i]);
+}
+
+static void shl_abs_impl(const VecU64 &a, const uint64_t b, VecU64 &res) {
+  const size_t size_a = a.size();
+  const size_t shift_limb = b / 64;
+  const size_t shift_bit = b % 64;
+
+  res.resize(size_a + shift_limb + 1);
+  memset(res.data(), 0, shift_limb * sizeof(uint64_t));
+
+  if (shift_bit == 0) {
+    memcpy(res.data() + shift_limb, a.data(), size_a * sizeof(uint64_t));
+    res.pop_back();
+  } else {
+    uint64_t carry = 0;
+    for (size_t i = 0; i < size_a; i++) {
+      const uint64_t curr = a[i];
+      res[i + shift_limb] = curr << shift_bit | carry;
+      carry = curr >> (64 - shift_bit);
+    }
+    if (carry) {
+      res.back() = carry;
+    } else {
+      res.pop_back();
+    }
+  }
+}
 
 void shl_abs_(const VecU64 &a, const uint64_t b, VecU64 &out) {
   if (a.empty()) {
@@ -13,33 +56,33 @@ void shl_abs_(const VecU64 &a, const uint64_t b, VecU64 &out) {
     return;
   }
 
+  if (a.data() == out.data()) {
+    VecU64 res;
+    shl_abs_impl(a, b, res);
+    out = std::move(res);
+  } else {
+    shl_abs_impl(a, b, out);
+  }
+}
+
+static void shr_abs_impl(const VecU64 &a, const uint64_t b, VecU64 &res) {
   const size_t size_a = a.size();
   const size_t shift_limb = b / 64;
   const size_t shift_bit = b % 64;
+  const size_t size_o = size_a - shift_limb;
 
-  // TODO: fix a == out
+  res.resize(size_o);
   if (shift_bit == 0) {
-    const size_t size_o = size_a + shift_limb;
-    out.assign(size_o, 0);
-    for (size_t i = 0; i < size_a; i++) {
-      out[i + shift_limb] = a[i];
-    }
-    return;
-  }
-
-  const size_t size_o = size_a + shift_limb + 1;
-  out.assign(size_o, 0);
-
-  uint64_t carry = 0;
-  for (size_t i = 0; i < size_a; i++) {
-    const uint64_t curr = a[i];
-    out[i + shift_limb] = curr << shift_bit | carry;
-    carry = curr >> (64 - shift_bit);
-  }
-  if (carry) {
-    out[size_a + shift_limb] = carry;
+    memcpy(res.data(), a.data() + shift_limb,
+           (size_a - shift_limb) * sizeof(uint64_t));
   } else {
-    out.pop_back();
+    uint64_t carry = 0;
+    for (size_t i = size_o; i--;) {
+      const uint64_t curr = a[i + shift_limb];
+      res[i] = curr >> shift_bit | carry;
+      carry = curr << (64 - shift_bit);
+    }
+    norm_top(res);
   }
 }
 
@@ -53,26 +96,13 @@ void shr_abs_(const VecU64 &a, const uint64_t b, VecU64 &out) {
     return;
   }
 
-  const size_t size_a = a.size();
-  const size_t shift_limb = b / 64;
-  const size_t shift_bit = b % 64;
-  const size_t size_o = size_a - shift_limb;
-  out.resize(size_o);
-
-  if (shift_bit == 0) {
-    for (size_t i = 0; i < size_o; i++) {
-      out[i] = a[i + shift_limb];
-    }
-    return;
+  if (a.data() == out.data()) {
+    VecU64 res;
+    shr_abs_impl(a, b, res);
+    out = std::move(res);
+  } else {
+    shr_abs_impl(a, b, out);
   }
-
-  uint64_t carry = 0;
-  for (size_t i = size_o; i--;) {
-    const uint64_t curr = a[i + shift_limb];
-    out[i] = curr >> shift_bit | carry;
-    carry = curr << (64 - shift_bit);
-  }
-  norm_top(out);
 }
 
 void Integer::shl_abs(const Integer &a, const uint64_t b, Integer &out) {
