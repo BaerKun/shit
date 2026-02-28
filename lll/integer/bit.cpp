@@ -14,10 +14,15 @@ static uint64_t ctz64(const uint64_t n) {
 #endif
 }
 
-uint64_t Integer::abs_ctz() const {
+uint64_t Integer::pow_of_2() const {
   uint64_t i, res = 0;
   for (i = 0; i < abs_val_.size() && !abs_val_[i]; i++) res += 64;
   return res + ctz64(abs_val_[i]);
+}
+
+uint64_t Integer::abs_log2() const {
+  if (abs_val_.empty()) return 0;
+  return abs_val_.size() * 64 - clz64(abs_val_.back()) - 1;
 }
 
 static void shl_abs_impl(const VecU64 &a, const uint64_t b, VecU64 &res) {

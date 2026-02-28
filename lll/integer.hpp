@@ -8,6 +8,8 @@
 namespace lll {
 class Integer {
 public:
+  using VecView = std::vector<uint64_t>;
+
   Integer(const Integer &other) = default;
   Integer(Integer &&other) = default;
   Integer &operator=(const Integer &other) = default;
@@ -29,9 +31,11 @@ public:
 
   bool neg() const { return neg_; }
   bool zero() const { return abs_val_.empty(); }
-  uint64_t abs_low64() const { return zero() ? 0 : abs_val_[0]; }
+  uint64_t abs_low64() const { return zero() ? 0 : abs_val_.front(); }
+  uint64_t pow_of_2() const; // max{ e | x = d * 2 ^ e }
+  uint64_t abs_log2() const; // floor(log2(|x|)), x != 0
   Integer abs() const { return neg_ ? -*this : *this; }
-  uint64_t abs_ctz() const;
+  const VecView &view_v() const { return abs_val_; }
 
   bool operator<(const Integer &other) const { return cmp(*this, other) < 0; }
 
@@ -252,9 +256,15 @@ public:
   static void div_64bits(const Integer &a, int64_t b, Integer &quot,
                          int64_t *rem = nullptr);
 
+  static Integer random(const Integer &bound);
+
 private:
+  Integer(const bool n, VecView &&v) : neg_(n),
+    abs_val_(std::move(v)) {
+  }
+
   bool neg_;
-  std::vector<uint64_t> abs_val_;
+  VecView abs_val_;
 };
 } // namespace lll
 

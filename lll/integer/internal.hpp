@@ -4,7 +4,7 @@
 #include "../integer.hpp"
 
 namespace lll {
-using VecU64 = std::vector<uint64_t>;
+using VecU64 = Integer::VecView;
 
 namespace internal {
 // a + b + c, carry = 0, 1, 2
@@ -43,6 +43,16 @@ static inline void mul64(const uint64_t a, const uint64_t b, uint64_t &high,
   high = (uint64_t)(prod >> 64);
 #else
 
+#endif
+}
+
+static inline uint64_t clz64(const uint64_t n) {
+#ifdef _MSC_VER
+  unsigned long res;
+  _BitScanReverse64(&res, n);
+  return 63 - res;
+#elif defined(__GNUC__) || defined(__clang__)
+  return __builtin_clzll(n);
 #endif
 }
 

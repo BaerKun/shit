@@ -10,6 +10,7 @@ set(SRC_LLL_INTEGER
         integer/multiply.cpp
         integer/simply.cpp
         integer/io.cpp
+        integer/utils.cpp
 )
 
 add_library(lll ${SRC_LLL_INTEGER})
