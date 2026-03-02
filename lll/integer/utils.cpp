@@ -35,7 +35,9 @@ Integer Integer::random(const Integer &bound) {
 
   VecView res(bound_v.size());
   while (!gen_random(bound.abs_val_, res, mask));
-  return {bound.neg_, std::move(res)};
+  norm(res);
+
+  return {!res.empty() && bound.neg_, std::move(res)};
 }
 
 }

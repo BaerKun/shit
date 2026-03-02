@@ -51,6 +51,36 @@ Integer pow_mod(const Integer &b, const Integer &e, const Integer &m) {
   return out;
 }
 
+uint64_t log(const Integer &b, const Integer &x) {
+  if (b <= 1) throw std::domain_error("b <= 1");
+  if (x.neg() || x.zero()) throw std::domain_error("x <= 0");
+  if (x < b) return 0;
+  if (x == b) return 1;
+
+  uint64_t out = 1;
+  std::vector<Integer> stack = {b};
+
+  while (true) {
+    const Integer &y = stack.back();
+    Integer z = y * y;
+    if (z > x) break;
+
+    out *= 2;
+    if (z == x) return out;
+    stack.push_back(std::move(z));
+  }
+
+  Integer &y = stack.back();
+  for (size_t i = stack.size() - 1; i--;) {
+    Integer z = y * stack[i];
+    if (z > x) continue;
+
+    out |= 1ull << i;
+    if (z == x) return out;
+    y = std::move(z);
+  }
+  return out;
+}
 
 Integer gcd(const Integer &a, const Integer &b) {
   Integer ca = a.abs(), cb = b.abs(), c;

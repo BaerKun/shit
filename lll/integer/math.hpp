@@ -6,6 +6,7 @@
 namespace lll {
 Integer pow(const Integer &b, uint64_t e);
 Integer pow_mod(const Integer &b, const Integer &e, const Integer &m);
+uint64_t log(const Integer &b, const Integer &x);
 Integer gcd(const Integer &a, const Integer &b);
 Integer sqrt(const Integer &n);
 bool is_prime(const Integer &n);

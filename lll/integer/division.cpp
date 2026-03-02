@@ -93,7 +93,7 @@ static void div_lll_main(VecU64 &ddd, const VecU64 &dsr, VecU64 *quot) {
     }
     ddd[i + n] -= borrow;
 
-    if (ddd[i + n] > borrow) {
+    if (ddd[i + n]) { // ddd[i + n] < 0
       q_hat -= 1;
       uint64_t carry = 0;
       for (size_t j = 0; j < n; j++) {
