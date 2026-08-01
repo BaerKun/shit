@@ -12,9 +12,9 @@ constexpr uint64_t MAX_DIGITS = 19;
 constexpr uint64_t BASE = 10000000000000000000llu; // 10^19
 
 static uint64_t *base_cache() {
-  static uint64_t cache[19];
+  static uint64_t cache[MAX_DIGITS + 1];
   cache[0] = 1;
-  for (size_t i = 1; i < MAX_DIGITS; i++) cache[i] = cache[i - 1] * 10;
+  for (size_t i = 1; i <= MAX_DIGITS; i++) cache[i] = cache[i - 1] * 10;
   return cache;
 }
 
@@ -83,7 +83,7 @@ std::string Integer::to_string() const {
   // log10(2^64)
   static const double LOG10_2_64 = std::log10(18446744073709551616.);
   const size_t size = abs_val_.size();
-  std::string str((size_t)((double)size * LOG10_2_64) + 3, '\0');
+  std::string str(static_cast<size_t>(static_cast<double>(size) * LOG10_2_64) + 3, '\0');
   char *ptr = &str[0];
   if (neg_) {
     ptr[0] = '-';
