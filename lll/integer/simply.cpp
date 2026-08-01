@@ -155,13 +155,14 @@ static void usub(const VecU64 &max, const VecU64 &min, VecU64 &out) {
     out[i] = sub64(max[i], borrow, 0, borrow);
   }
 
-  if (size_max <= size_min + 1) norm(out);
-  else norm_top(out);
+  if (size_max <= size_min + 1)
+    norm(out);
+  else
+    norm_top(out);
 }
 
-static bool add_64bits_impl(const bool neg_a, const VecU64 &abs_a,
-                            const bool neg_b, const uint64_t abs_b,
-                            VecU64 &abs_o) {
+static bool add_64bits_impl(const bool neg_a, const VecU64 &abs_a, const bool neg_b,
+                            const uint64_t abs_b, VecU64 &abs_o) {
   if (neg_a == neg_b) {
     uadd_64bits_(abs_a, abs_b, abs_o);
     return neg_a;
@@ -179,8 +180,8 @@ static bool add_64bits_impl(const bool neg_a, const VecU64 &abs_a,
   }
 }
 
-static bool add_impl(const bool neg_a, const VecU64 &abs_a, const bool neg_b,
-                     const VecU64 &abs_b, VecU64 &abs_o) {
+static bool add_impl(const bool neg_a, const VecU64 &abs_a, const bool neg_b, const VecU64 &abs_b,
+                     VecU64 &abs_o) {
   if (neg_a == neg_b) {
     uadd(abs_a, abs_b, abs_o);
     return neg_a;
@@ -207,8 +208,7 @@ void Integer::add(const Integer &a, const Integer &b, Integer &out) {
 }
 
 void Integer::sub_64bits(const Integer &a, const int64_t b, Integer &out) {
-  out.neg_ =
-      add_64bits_impl(a.neg_, a.abs_val_, b >= 0, abs64(b), out.abs_val_);
+  out.neg_ = add_64bits_impl(a.neg_, a.abs_val_, b >= 0, abs64(b), out.abs_val_);
 }
 
 void Integer::sub(const Integer &a, const Integer &b, Integer &out) {

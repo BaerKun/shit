@@ -1,8 +1,8 @@
 #include "internal.hpp"
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <iostream>
-#include <algorithm>
 
 namespace lll {
 using namespace internal;
@@ -53,7 +53,9 @@ Integer::Integer(const std::string &value) : neg_(false) {
 
 static size_t to_string_base(uint64_t n, char *ptr, const bool leading_zero) {
   size_t len = 0;
-  do ptr[len++] = static_cast<char>('0' + n % 10); while (n /= 10);
+  do {
+    ptr[len++] = static_cast<char>('0' + n % 10);
+  } while (n /= 10);
   if (!leading_zero) return len;
   memset(ptr + len, '0', MAX_DIGITS - len);
   return MAX_DIGITS;
@@ -101,7 +103,5 @@ std::istream &operator>>(std::istream &is, Integer &a) {
   return is;
 }
 
-std::ostream &operator<<(std::ostream &os, const Integer &a) {
-  return os << a.to_string();
-}
-}
+std::ostream &operator<<(std::ostream &os, const Integer &a) { return os << a.to_string(); }
+} // namespace lll

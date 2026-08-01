@@ -5,12 +5,12 @@ namespace lll {
 using namespace internal;
 
 // quotient should be always 64-bits.
-static inline uint64_t div128(const uint64_t high, const uint64_t low,
-                              const uint64_t divisor, uint64_t &rem) {
+static inline uint64_t div128(const uint64_t high, const uint64_t low, const uint64_t divisor,
+                              uint64_t &rem) {
 #if defined(_MSC_VER)
   return _udiv128(high, low, divisor, &rem);
 #elif defined(__GNUC__) || defined(__clang__)
-  const __uint128_t dividend = (__uint128_t)high << 64 | (__uint128_t)low;
+  const __uint128_t dividend = static_cast<__uint128_t>(high) << 64 | static_cast<__uint128_t>(low);
   rem = dividend % divisor;
   return dividend / divisor;
 #else
@@ -18,8 +18,7 @@ static inline uint64_t div128(const uint64_t high, const uint64_t low,
 #endif
 }
 
-void internal::udiv_64bits_(const VecU64 &ddd, const uint64_t dsr, VecU64 &quot,
-                            uint64_t &rem) {
+void internal::udiv_64bits_(const VecU64 &ddd, const uint64_t dsr, VecU64 &quot, uint64_t &rem) {
   const size_t size = ddd.size();
   rem = 0;
   quot.resize(size);
@@ -38,8 +37,7 @@ static uint64_t umod_64bits_(const VecU64 &ddd, const uint64_t dsr) {
   return rem;
 }
 
-static uint64_t
-shift_left(const VecU64 &src, VecU64 &dst, const uint64_t shift) {
+static uint64_t shift_left(const VecU64 &src, VecU64 &dst, const uint64_t shift) {
   uint64_t carry = 0;
   for (size_t i = 0; i < src.size(); i++) {
     const uint64_t curr = src[i];
@@ -49,8 +47,8 @@ shift_left(const VecU64 &src, VecU64 &dst, const uint64_t shift) {
   return carry;
 }
 
-static void shift_operands(const VecU64 &dividend, const VecU64 &divisor,
-                           VecU64 &ddd, VecU64 &dsr, const uint64_t shift) {
+static void shift_operands(const VecU64 &dividend, const VecU64 &divisor, VecU64 &ddd, VecU64 &dsr,
+                           const uint64_t shift) {
   if (shift == 0) {
     ddd = dividend;
     dsr = divisor;
@@ -124,8 +122,7 @@ static void pop_rem_lll(VecU64 &ddd, VecU64 &rem, const uint64_t shift) {
   norm_top(rem);
 }
 
-static void div_lll(const VecU64 &dividend, const VecU64 &divisor, VecU64 &quot,
-                    VecU64 *rem) {
+static void div_lll(const VecU64 &dividend, const VecU64 &divisor, VecU64 &quot, VecU64 *rem) {
   const int cmp_res = ucmp(dividend, divisor);
   if (cmp_res == 0) {
     assign64(quot, 1);
@@ -148,8 +145,7 @@ static void div_lll(const VecU64 &dividend, const VecU64 &divisor, VecU64 &quot,
   if (rem) pop_rem_lll(ddd, *rem, shift);
 }
 
-static void mod_lll(const VecU64 &dividend, const VecU64 &divisor,
-                    VecU64 &rem) {
+static void mod_lll(const VecU64 &dividend, const VecU64 &divisor, VecU64 &rem) {
   const int cmp_res = ucmp(dividend, divisor);
   if (cmp_res == 0) {
     rem.clear();
@@ -167,8 +163,7 @@ static void mod_lll(const VecU64 &dividend, const VecU64 &divisor,
   pop_rem_lll(ddd, rem, shift);
 }
 
-void Integer::div_64bits(const Integer &a, const int64_t b, Integer &quot,
-                         int64_t *rem) {
+void Integer::div_64bits(const Integer &a, const int64_t b, Integer &quot, int64_t *rem) {
   if (b == 0) throw std::domain_error("Division by zero");
 
   uint64_t rem_u;
@@ -178,8 +173,7 @@ void Integer::div_64bits(const Integer &a, const int64_t b, Integer &quot,
   if (rem) *rem = static_cast<int64_t>(a.neg_ ? -rem_u : rem_u);
 }
 
-void Integer::div(const Integer &a, const Integer &b, Integer &quot,
-                  Integer *rem) {
+void Integer::div(const Integer &a, const Integer &b, Integer &quot, Integer *rem) {
   if (b.zero()) throw std::domain_error("Division by zero");
 
   const VecU64 &dividend = a.abs_val_;

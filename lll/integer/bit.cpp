@@ -124,4 +124,4 @@ void Integer::shr_abs(const Integer &a, const uint64_t b, Integer &out) {
   shr_abs_(a.abs_val_, b, out.abs_val_);
   out.neg_ = !out.zero() && a.neg_;
 }
-}
+} // namespace lll

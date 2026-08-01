@@ -40,4 +40,4 @@ Integer Integer::random(const Integer &bound) {
   return {!res.empty() && bound.neg_, std::move(res)};
 }
 
-}
+} // namespace lll

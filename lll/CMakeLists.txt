@@ -14,6 +14,3 @@ set(SRC_LLL_INTEGER
 )
 
 add_library(lll ${SRC_LLL_INTEGER})
-
-add_executable(test _test.cpp)
-target_link_libraries(test PRIVATE lll)

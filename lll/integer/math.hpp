@@ -11,6 +11,6 @@ Integer gcd(const Integer &a, const Integer &b);
 Integer sqrt(const Integer &n);
 bool is_prime(const Integer &n);
 bool prime_test(const Integer &n, size_t t = 1);
-}
+} // namespace lll
 
 #endif // LLL_INTEGER_MATH_HPP

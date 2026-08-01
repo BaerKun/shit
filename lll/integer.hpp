@@ -19,9 +19,7 @@ public:
   std::string to_string() const;
 
   Integer(const int64_t value = 0) // NOLINT(*-explicit-constructor)
-    : neg_(value < 0),
-      abs_val_(value != 0, static_cast<uint64_t>(neg_ ? -value : value)) {
-  }
+      : neg_(value < 0), abs_val_(value != 0, static_cast<uint64_t>(neg_ ? -value : value)) {}
 
   Integer &operator=(const int64_t value) {
     neg_ = value < 0;
@@ -31,47 +29,29 @@ public:
 
   bool neg() const { return neg_; }
   bool zero() const { return abs_val_.empty(); }
-  uint64_t abs_low64() const { return zero() ? 0 : abs_val_.front(); }
+  uint64_t abs_mod_2_64() const { return zero() ? 0 : abs_val_.front(); }
   uint64_t pow_of_2() const; // max{ e | x = d * 2 ^ e }
   uint64_t abs_log2() const; // floor(log2(|x|)), x != 0
   Integer abs() const { return neg_ ? -*this : *this; }
   const VecView &view_v() const { return abs_val_; }
 
   bool operator<(const Integer &other) const { return cmp(*this, other) < 0; }
-
-  bool operator<(const int64_t other) const {
-    return cmp_64bits(*this, other) < 0;
-  }
+  bool operator<(const int64_t other) const { return cmp_64bits(*this, other) < 0; }
 
   bool operator>(const Integer &other) const { return cmp(*this, other) > 0; }
-
-  bool operator>(const int64_t &other) const {
-    return cmp_64bits(*this, other) > 0;
-  }
+  bool operator>(const int64_t &other) const { return cmp_64bits(*this, other) > 0; }
 
   bool operator==(const Integer &other) const { return cmp(*this, other) == 0; }
-
-  bool operator==(const int64_t &other) const {
-    return cmp_64bits(*this, other) == 0;
-  }
+  bool operator==(const int64_t &other) const { return cmp_64bits(*this, other) == 0; }
 
   bool operator<=(const Integer &other) const { return cmp(*this, other) <= 0; }
-
-  bool operator<=(const int64_t &other) const {
-    return cmp_64bits(*this, other) <= 0;
-  }
+  bool operator<=(const int64_t &other) const { return cmp_64bits(*this, other) <= 0; }
 
   bool operator>=(const Integer &other) const { return cmp(*this, other) >= 0; }
-
-  bool operator>=(const int64_t &other) const {
-    return cmp_64bits(*this, other) >= 0;
-  }
+  bool operator>=(const int64_t &other) const { return cmp_64bits(*this, other) >= 0; }
 
   bool operator!=(const Integer &other) const { return cmp(*this, other) != 0; }
-
-  bool operator!=(const int64_t &other) const {
-    return cmp_64bits(*this, other) != 0;
-  }
+  bool operator!=(const int64_t &other) const { return cmp_64bits(*this, other) != 0; }
 
   Integer operator++(int) = delete;
   Integer operator--(int) = delete;
@@ -241,8 +221,7 @@ public:
   // a % b
   static void mod(const Integer &a, const Integer &b, Integer &out);
   // quot = a / b, rem = a % b
-  static void div(const Integer &a, const Integer &b, Integer &quot,
-                  Integer *rem = nullptr);
+  static void div(const Integer &a, const Integer &b, Integer &quot, Integer *rem = nullptr);
   // a * pow(2, b)
   static void shl_abs(const Integer &a, uint64_t b, Integer &out);
   // a / pow(2, b)
@@ -253,15 +232,12 @@ public:
   static void sub_64bits(const Integer &a, int64_t b, Integer &out);
   static void mul_64bits(const Integer &a, int64_t b, Integer &out);
   static void mod_64bits(const Integer &a, int64_t b, int64_t &out);
-  static void div_64bits(const Integer &a, int64_t b, Integer &quot,
-                         int64_t *rem = nullptr);
+  static void div_64bits(const Integer &a, int64_t b, Integer &quot, int64_t *rem = nullptr);
 
   static Integer random(const Integer &bound);
 
 private:
-  Integer(const bool n, VecView &&v) : neg_(n),
-    abs_val_(std::move(v)) {
-  }
+  Integer(const bool n, VecView &&v) : neg_(n), abs_val_(std::move(v)) {}
 
   bool neg_;
   VecView abs_val_;

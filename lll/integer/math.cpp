@@ -119,10 +119,9 @@ Integer sqrt(const Integer &n) {
 bool is_prime(const Integer &n) {
   if (n < 2) return false;
   if (n < 4) return true;
+  if (n.abs_mod_2_64() % 2 == 0) return false;
 
-  Integer rem = n % 2;
-  if (rem.zero()) return false;
-
+  Integer rem;
   const Integer sqrt_n = sqrt(n);
   for (Integer m = 3; m <= sqrt_n; m += 2) {
     Integer::mod(n, m, rem);
@@ -131,8 +130,8 @@ bool is_prime(const Integer &n) {
   return true;
 }
 
-static bool prime_test_step(const Integer &n, const Integer &m,
-                            const Integer &d, const uint64_t s) {
+static bool prime_test_step(const Integer &n, const Integer &m, const Integer &d,
+                            const uint64_t s) {
   const Integer a = Integer::random(n - 4) + 2;
   Integer x = pow_mod(a, d, n);
   if (x.zero()) return false;

@@ -13,7 +13,7 @@ void internal::umul_64bits_(const VecU64 &a, const uint64_t b, VecU64 &out) {
     out[i] = add64(low, carry, 0, carry);
     carry += high;
   }
-  if (carry) out.back() = carry;
+  if (carry) out[size] = carry;
   else out.pop_back();
 }
 

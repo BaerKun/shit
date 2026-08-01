@@ -8,8 +8,8 @@ using VecU64 = Integer::VecView;
 
 namespace internal {
 // a + b + c, carry = 0, 1, 2
-static inline uint64_t add64(const uint64_t a, const uint64_t b,
-                             const uint64_t c, uint64_t &carry) {
+static inline uint64_t add64(const uint64_t a, const uint64_t b, const uint64_t c,
+                             uint64_t &carry) {
   uint64_t res = a + b;
   const uint64_t carry1 = res < b;
 
@@ -21,8 +21,8 @@ static inline uint64_t add64(const uint64_t a, const uint64_t b,
 }
 
 // a - b - c, borrow = 0, 1, 2
-static inline uint64_t sub64(const uint64_t a, const uint64_t b,
-                             const uint64_t c, uint64_t &borrow) {
+static inline uint64_t sub64(const uint64_t a, const uint64_t b, const uint64_t c,
+                             uint64_t &borrow) {
   const uint64_t borrow1 = a < b;
   uint64_t res = a - b;
 
@@ -33,8 +33,7 @@ static inline uint64_t sub64(const uint64_t a, const uint64_t b,
   return res;
 }
 
-static inline void mul64(const uint64_t a, const uint64_t b, uint64_t &high,
-                         uint64_t &low) {
+static inline void mul64(const uint64_t a, const uint64_t b, uint64_t &high, uint64_t &low) {
 #if defined(_MSC_VER)
   low = _umul128(a, b, &high);
 #elif defined(__GNUC__) || defined(__clang__)
@@ -56,13 +55,9 @@ static inline uint64_t clz64(const uint64_t n) {
 #endif
 }
 
-static inline uint64_t abs64(const int64_t x) {
-  return x < 0 ? -x : x;
-}
+static inline uint64_t abs64(const int64_t x) { return x < 0 ? -x : x; }
 
-static inline void assign64(VecU64 &a, const uint64_t value) {
-  a.assign(value != 0, value);
-}
+static inline void assign64(VecU64 &a, const uint64_t value) { a.assign(value != 0, value); }
 
 static inline void norm_top(VecU64 &a) {
   if (a.back() == 0) a.pop_back();
